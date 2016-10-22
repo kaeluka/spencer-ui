@@ -37,6 +37,17 @@ class HomeController (val db : SpencerDB, lifecycle: ApplicationLifecycle) exten
     Ok(views.html.index("Your new application is ready."))
   }
 
+  def objectQueryResultToHtml(objects: Array[VertexId]) : String = {
+
+    val head = "<div class=\"result-size\">"+objects.size+" objects</div>"
+    val table = objects.map(
+      "<tr>\n" +
+        "<td>"+_+"</td>\n" +
+        "</tr>").mkString("<table class=\"result-table\">", "\n", "</table>")
+
+    head+table
+  }
+
   def query = Action { implicit req =>
     req.getQueryString("q") match {
       case Some(q) =>
@@ -46,9 +57,11 @@ class HomeController (val db : SpencerDB, lifecycle: ApplicationLifecycle) exten
 
         query match {
           case Some(q) =>
-            val rdd: RDD[VertexId] = q.analyse
+            val rdd: Array[VertexId] = q.analyse.collect()
+            val innerHtml = objectQueryResultToHtml(rdd)
+
 //            Scratch.run
-            Ok(views.html.index("Result of "+q+":<br/>" + q.pretty(rdd)))
+            Ok(views.html.result(q.toString, innerHtml))
           case None =>
             NotAcceptable("could not parse the query")
         }
