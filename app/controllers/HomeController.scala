@@ -37,13 +37,16 @@ class HomeController (val db : SpencerDB, lifecycle: ApplicationLifecycle) exten
     Ok(views.html.index("Your new application is ready."))
   }
 
-  def objectQueryResultToHtml(objects: Array[VertexId]) : String = {
+  def objectQueryResultToHtml(implicit db: SpencerData, objects: Array[(VertexId, Option[String])]) : String = {
 
     val head = "<div class=\"result-size\">"+objects.size+" objects</div>"
-    val table = objects.map(
-      "<tr>\n" +
-        "<td>"+_+"</td>\n" +
-        "</tr>").mkString("<table class=\"result-table\">", "\n", "</table>")
+    val table = objects.map {
+      case (id, optKlass) =>
+        "<tr>\n" +
+          "<td>" + id + "</td>\n" +
+          "<td>" + optKlass.getOrElse("N/A") + "</td>\n" +
+          "</tr>"
+    }.mkString("<table class=\"result-table\">", "\n", "</table>")
 
     head+table
   }
@@ -57,8 +60,8 @@ class HomeController (val db : SpencerDB, lifecycle: ApplicationLifecycle) exten
 
         query match {
           case Some(q) =>
-            val rdd: Array[VertexId] = q.analyse.collect()
-            val innerHtml = objectQueryResultToHtml(rdd)
+            val objects: Array[(VertexId, Option[String])] = WithClassName(q).analyse.collect()
+            val innerHtml = objectQueryResultToHtml(data, objects)
 
 //            Scratch.run
             Ok(views.html.result(q.toString, innerHtml))
