@@ -18,7 +18,7 @@ import scala.concurrent.Future
  * application's home page.
  */
 @Singleton
-class HomeController (val db : SpencerDB, lifecycle: ApplicationLifecycle) extends Controller {
+class SpencerUIController(val db : SpencerDB, lifecycle: ApplicationLifecycle) extends Controller {
 
   @Inject()
   def this(lifecycle: ApplicationLifecycle) = {
@@ -37,18 +37,28 @@ class HomeController (val db : SpencerDB, lifecycle: ApplicationLifecycle) exten
     Ok(views.html.index("Your new application is ready."))
   }
 
-  def objectQueryResultToHtml(implicit db: SpencerData, objects: Array[(VertexId, Option[String])]) : String = {
+  def objectQueryResultAsHtml(implicit db: SpencerData, objects: Array[(VertexId, Option[String], Option[String])]) : String = {
 
-    val head = "<div class=\"result-size\">"+objects.size+" objects</div>"
+    //val head = "<div class=\"result-size \">"+objects.size+" objects</div>"
+
+    val head =
+      "  <thead>\n" +
+        "    <tr>\n" +
+        "      <th>Obj. ID</th>\n" +
+        "      <th>Class</th>\n" +
+        "      <th>Allocation Site</th>\n"+
+        "    </tr>\n" +
+        "  </thead>\n"
     val table = objects.map {
-      case (id, optKlass) =>
-        "<tr>\n" +
-          "<td>" + id + "</td>\n" +
-          "<td>" + optKlass.getOrElse("N/A") + "</td>\n" +
-          "</tr>"
-    }.mkString("<table class=\"result-table\">", "\n", "</table>")
+      case (id, optKlass, optAllocationSite) =>
+        "    <tr>\n" +
+          "      <td class=\"object-id\">" + id + "</td>\n" +
+          "      <td>" + optKlass.getOrElse("N/A") + "</td>\n" +
+          "      <td>" + optAllocationSite.getOrElse("N/A") + "</td>\n" +
+          "    </tr>"
+    }.mkString("<table id=\"resultTable\" class=\"tablesorter\">\n"+head+"\n  <tbody>\n", "\n", "\n  </tbody>\n</table>")
 
-    head+table
+    table
   }
 
   def query = Action { implicit req =>
@@ -60,8 +70,8 @@ class HomeController (val db : SpencerDB, lifecycle: ApplicationLifecycle) exten
 
         query match {
           case Some(q) =>
-            val objects: Array[(VertexId, Option[String])] = WithClassName(q).analyse.collect()
-            val innerHtml = objectQueryResultToHtml(data, objects)
+            val objects = WithMetaInformation(q).analyse.collect()
+            val innerHtml = objectQueryResultAsHtml(data, objects)
 
 //            Scratch.run
             Ok(views.html.result(q.toString, innerHtml))

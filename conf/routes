@@ -3,9 +3,9 @@
 # ~~~~
 
 # An example controller showing a sample home page
-GET     /                           controllers.HomeController.index
+GET     /                           controllers.SpencerUIController.index
 
-GET     /query                      controllers.HomeController.query
+GET     /query                      controllers.SpencerUIController.query
 
 # An example controller showing how to use dependency injection
 GET     /count                      controllers.CountController.count
