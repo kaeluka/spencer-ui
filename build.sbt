@@ -25,10 +25,3 @@ dependencyOverrides ++= Set(
   //"com.fasterxml.jackson.core" % "jackson-databind" % "2.4.4"
 )
 
-//ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true)}
-
-//resolvers += Resolvers
-resolvers +=
-  "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
-
-//println(dependencyClasspath)
