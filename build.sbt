@@ -1,3 +1,5 @@
+import play.sbt.PlayImport._
+
 name := """spencer-ui"""
 
 version := "1.0-SNAPSHOT"
@@ -13,6 +15,8 @@ libraryDependencies ++= Seq(
   cache,
   ws,
   "org.scalatestplus.play" %% "scalatestplus-play" % "1.5.1" % Test,
+  //"org.apache.spark" %% "spark-graphx" % "1.6.1",
+  //"org.apache.spark" ^^
   "com.github.kaeluka" % "spencer-analyse" % "0.1.3-SNAPSHOT"
 )
 
@@ -20,3 +24,11 @@ dependencyOverrides ++= Set(
   "com.fasterxml.jackson.core" % "jackson-databind" % "2.6.5" // for spark 2.0.0
   //"com.fasterxml.jackson.core" % "jackson-databind" % "2.4.4"
 )
+
+//ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true)}
+
+//resolvers += Resolvers
+resolvers +=
+  "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
+
+//println(dependencyClasspath)

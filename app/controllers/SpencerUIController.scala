@@ -56,9 +56,14 @@ class SpencerUIController(val db : SpencerDB, lifecycle: ApplicationLifecycle) e
           "      <td>" + optKlass.getOrElse("N/A") + "</td>\n" +
           "      <td>" + optAllocationSite.getOrElse("N/A") + "</td>\n" +
           "    </tr>"
-    }.mkString("<table id=\"resultTable\" class=\"tablesorter\">\n"+head+"\n  <tbody>\n", "\n", "\n  </tbody>\n</table>")
+    }.mkString("\n")
 
-    table
+    "<table id=\"resultTable\" class=\"tablesorter\">\n"+
+      head+
+      "\n  <tbody>\n"+
+      table+
+      "\n  </tbody>\n" +
+      "</table>"
   }
 
   def query = Action { implicit req =>
