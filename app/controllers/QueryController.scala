@@ -60,7 +60,7 @@ object QueryControllerUtil {
       x =>
         "    <tr>\n" +
           "      <td><input name='chk-"+(x.id)+"' type='checkbox'/></td>\n" +
-          "      <td class=\"object-id\">" + x.id + "</td>\n" +
+          "      <td class=\"object-id\">" + AproposControllerUtil.idxWithHint(dbname, x.id) + "</td>\n" +
           classNameToTd(x.klass) +
           "      <td>" + x.allocationSite.getOrElse("N/A") + "</td>\n" +
           "    </tr>"
@@ -81,30 +81,8 @@ object QueryControllerUtil {
   * application's home page.
   */
 @Singleton
-class QueryController @Inject()(lifecycle: ApplicationLifecycle, messagesApi : MessagesApi) extends Controller {
+class QueryController @Inject()(lifecycle: ApplicationLifecycle, messagesApi : MessagesApi, mainC: MainController) extends Controller {
 
-  val f = Form(
-    Forms.mapping(
-      "dbname" -> text,
-      "query"  -> text
-    )(QueryData.apply)(QueryData.unapply))
-
-
-  val dbMap : java.util.HashMap[String, SpencerDB] = new util.HashMap[String, SpencerDB]()
-
-  //  @Inject()
-  //  def this(lifecycle: ApplicationLifecycle) = {
-  //    this(lifecycle)
-  //  }
-
-  def getDB(name: String): SpencerDB = {
-    if (! this.dbMap.containsKey(name)) {
-      this.dbMap.put(name, new SpencerDB(name))
-      this.dbMap.get(name).connect()
-      this.lifecycle.addStopHook { () => Future.successful(this.dbMap.get(name).db.shutdown()) }
-    }
-    this.dbMap.get(name)
-  }
   /**
     * Create an Action to render an HTML page with a welcome message.
     * The configuration in the `routes` file means that this method
@@ -115,14 +93,14 @@ class QueryController @Inject()(lifecycle: ApplicationLifecycle, messagesApi : M
     Ok(views.html.index()(messagesApi.preferred(request)))
   }
 
-  def queryDataPost() = Action { implicit request =>
+  def queryDataPost(dbname: String) = Action { implicit request =>
     val selected = request.rawQueryString.split("&").map(_.replace("=on", "").replace("chk-", "").toLong).mkString(" ")
 
     Redirect(routes.QueryController.query("test", "Set("+selected+")"))
   }
 
   def query(dbname: String, q: String) = Action { implicit req =>
-    implicit val data: SpencerData = this.getDB(dbname)
+    implicit val data: SpencerData = mainC.getDB(dbname)
     //
     val query: Either[String, SpencerAnalyser[RDD[VertexId]]] = QueryParser.parseObjQuery(q)
     println("================================ "+q+" -parsed-> "+query.toString)

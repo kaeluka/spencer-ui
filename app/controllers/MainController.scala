@@ -16,13 +16,23 @@ import play.api.mvc._
 
 import scala.concurrent.Future
 
-
 /**
   * This controller creates an `Action` to handle HTTP requests to the
   * application's home page.
   */
 @Singleton
-class IndexController @Inject()(lifecycle: ApplicationLifecycle, messagesApi : MessagesApi) extends Controller {
+class MainController @Inject()(lifecycle: ApplicationLifecycle, messagesApi : MessagesApi) extends Controller {
+
+  val dbMap : java.util.HashMap[String, SpencerDB] = new util.HashMap[String, SpencerDB]()
+
+  def getDB(name: String): SpencerDB = {
+    if (! this.dbMap.containsKey(name)) {
+      this.dbMap.put(name, new SpencerDB(name))
+      this.dbMap.get(name).connect()
+      this.lifecycle.addStopHook { () => Future.successful(this.dbMap.get(name).db.shutdown()) }
+    }
+    this.dbMap.get(name)
+  }
 
   def index = Action { implicit request =>
     Ok(views.html.index()(messagesApi.preferred(request)))

@@ -3,13 +3,15 @@
 # ~~~~
 
 # An example controller showing a sample home page
-GET     /                           controllers.IndexController.index
+GET     /                           controllers.MainController.index
 
 GET     /query/                     controllers.QueryController.query(n = "test", q = "Obj()")
 GET     /query/:n                   controllers.QueryController.query(n, q = "Obj()")
 GET     /query/:n/:q                controllers.QueryController.query(n, q)
 
-GET     /queryDataPost/             controllers.QueryController.queryDataPost()
+GET     /apropos/:n/:idx            controllers.AproposController.apropos(n, idx)
+
+GET     /queryDataPost/:n           controllers.QueryController.queryDataPost(n)
 
 # An example controller showing how to use dependency injection
 GET     /count                      controllers.CountController.count

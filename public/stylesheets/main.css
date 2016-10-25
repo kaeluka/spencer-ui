@@ -1,0 +1,11 @@
+html, body {
+    height: 100%;
+}
+
+html, body, form {
+    height: 85%;
+}
+
+.code {
+    font-family: 'DejaVu Sans Mono', monospace;
+}
