@@ -3,9 +3,13 @@
 # ~~~~
 
 # An example controller showing a sample home page
-GET     /                           controllers.SpencerUIController.index
+GET     /                           controllers.IndexController.index
 
-GET     /query                      controllers.SpencerUIController.query
+GET     /query/                     controllers.QueryController.query(n = "test", q = "Obj()")
+GET     /query/:n                   controllers.QueryController.query(n, q = "Obj()")
+GET     /query/:n/:q                controllers.QueryController.query(n, q)
+
+GET     /queryDataPost/             controllers.QueryController.queryDataPost()
 
 # An example controller showing how to use dependency injection
 GET     /count                      controllers.CountController.count
