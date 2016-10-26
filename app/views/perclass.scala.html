@@ -1,0 +1,81 @@
+@import controllers.QueryControllerUtil
+@import com.github.kaeluka.spencer.tracefiles._
+@*
+* This template takes a single argument, a String containing a
+* message to display.
+*@
+@(dbname: String, query: String, data: Seq[(Option[String], (Int, Int))])
+
+@*
+* Call the `main` template with two arguments. The first
+* argument is a `String` with the title of the page, the second
+* argument is an `Html` object containing the body of the page.
+*@
+@main("Per Class: @title") {
+
+    @*
+    * Get an `Html` object by calling the built-in Play welcome
+    * template and passing a `String` message.
+    * @play20.welcome(message, style = "Scala")
+    *@
+    <h2>Per Class: @query</h2>
+
+    <div class="perclass">
+        <table id="perClassResult" class="tablesorter">
+            <caption>Classes with at least 10 instances.</caption>
+            <thead>
+                <tr>
+                    <th>Class</th>
+                    <th>Success [%]</th>
+                    <th>Success [#]</th>
+                    <th>Fail [#]</th>
+                </tr>
+            </thead>
+            <tbody>
+            @Html(
+                data.filter({ case (_, (_, n)) => n >= 10})
+                        .map {
+                    case (oKlass, (succ, totl)) =>
+                        (oKlass match {
+                            case Some(klass) =>
+                                val (s, f) = PerClassControllerUtil.successCountAndFailCountTexts(dbname, query, klass, succ, totl-succ)
+                                s"<td class='klassname'>$klass</td>" +
+                                s"<td>${succ.toFloat*100/totl}</td>\n<td>$s</td><td>$f</td>\n"
+                            case None =>
+                                s"<td><span class='empty'>N/A</span></td>" +
+                                        s"<td>${succ.toFloat*100/totl}</td>\n<td>$succ</td><td>${totl-succ}</td>\n"
+                        })
+                }
+                        .map("<tr>\n"+_+"\n</tr>")
+                        .mkString("\n")
+            )
+            </tbody>
+        </table>
+        <table id="perClassResult" class="tablesorter">
+            <caption>Classes with less than 10 instances.</caption>
+            <thead>
+                <tr>
+                    <th>Class</th>
+                    <th>Success [#]</th>
+                    <th>Total [#]</th>
+                </tr>
+            </thead>
+            <tbody>
+            @Html(
+                data.filter({ case (_, (_, n)) => n < 10})
+                    .map {
+                        case (oKlass, (succ, totl)) =>
+                            (oKlass match {
+                                case Some(klass) =>
+                                    s"<td class='klassname'>$klass</td>"
+                                case None =>
+                                    s"<td><span class='empty'>N/A</span></td>"
+                            }) + s"<td>$succ</td><td>$totl</td>\n"
+                    }
+                    .map("<tr>\n"+_+"\n</tr>")
+                    .mkString("\n")
+            )
+            </tbody>
+        </table>
+    </div>
+}

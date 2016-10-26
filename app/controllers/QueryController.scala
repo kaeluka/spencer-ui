@@ -89,16 +89,6 @@ object QueryControllerUtil {
 @Singleton
 class QueryController @Inject()(lifecycle: ApplicationLifecycle, messagesApi : MessagesApi, mainC: MainController) extends Controller {
 
-  /**
-    * Create an Action to render an HTML page with a welcome message.
-    * The configuration in the `routes` file means that this method
-    * will be called when the application receives a `GET` request with
-    * a path of `/`.
-    */
-  def index = Action { implicit request =>
-    Ok(views.html.index()(messagesApi.preferred(request)))
-  }
-
   def queryDataPost(dbname: String) = Action { implicit request =>
     val selected = request.rawQueryString.split("&").map(_.replace("=on", "").replace("chk-", "").toLong).mkString(" ")
 
@@ -114,7 +104,6 @@ class QueryController @Inject()(lifecycle: ApplicationLifecycle, messagesApi : M
     query match {
       case Right(qObj) =>
         val objects = WithMetaInformation(qObj).analyse.collect().map(ResultObj.tupled).toList
-        val innerHtml = QueryControllerUtil.objectQueryResultAsHtml(dbname, q, objects)
 
         val f = ResultsForm(dbname, query = q, results = objects.toList, selection = List())
 //        val resultsForm = Form(
