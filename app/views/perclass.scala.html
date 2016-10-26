@@ -20,6 +20,30 @@
     *@
     <h2>Per Class: @query</h2>
 
+    <div id="hist"></div>
+
+    <script>
+            HIST = document.getElementById('hist');
+            var data = [{
+
+                x: [@Html(data.filter(_._2._2 >= 10).map({case (klass, (_, _)) => klass.map("'"+_+"'").getOrElse("'N/A'") }).mkString(", "))],
+                y: [@Html(data.filter(_._2._2 >= 10).map({case (_, (s, totl)) => s.toFloat*100/totl }).mkString(", "))],
+                type: 'bar',
+                marker: {
+                    color: 'rgba(50,171, 96, 0.7)',
+                    line: {
+                        color: 'rgba(50,171,96,1.0)',
+                        width: 2
+                    }
+                }
+            }];
+            var layout = {
+                title: 'Successful instances, for classes with at least 10 Instances.',
+                autosize: true
+            };
+        Plotly.newPlot(HIST, data, layout)
+    </script>
+
     <div class="perclass">
         <table id="perClassResult" class="tablesorter">
             <caption>Classes with at least 10 instances.</caption>
@@ -36,15 +60,15 @@
                 data.filter({ case (_, (_, n)) => n >= 10})
                         .map {
                     case (oKlass, (succ, totl)) =>
-                        (oKlass match {
+                        oKlass match {
                             case Some(klass) =>
-                                val (s, f) = PerClassControllerUtil.successCountAndFailCountTexts(dbname, query, klass, succ, totl-succ)
+                                val (s, f) = PerClassControllerUtil.successCountAndFailCountTexts(dbname, query, klass, succ, totl - succ)
                                 s"<td class='klassname'>$klass</td>" +
-                                s"<td>${succ.toFloat*100/totl}</td>\n<td>$s</td><td>$f</td>\n"
+                                        s"<td>${succ.toFloat * 100 / totl}</td>\n<td>$s</td><td>$f</td>\n"
                             case None =>
                                 s"<td><span class='empty'>N/A</span></td>" +
-                                        s"<td>${succ.toFloat*100/totl}</td>\n<td>$succ</td><td>${totl-succ}</td>\n"
-                        })
+                                        s"<td>${succ.toFloat * 100 / totl}</td>\n<td>$succ</td><td>${totl - succ}</td>\n"
+                        }
                 }
                         .map("<tr>\n"+_+"\n</tr>")
                         .mkString("\n")
@@ -57,7 +81,7 @@
                 <tr>
                     <th>Class</th>
                     <th>Success [#]</th>
-                    <th>Total [#]</th>
+                    <th>Fail [#]</th>
                 </tr>
             </thead>
             <tbody>
@@ -65,12 +89,13 @@
                 data.filter({ case (_, (_, n)) => n < 10})
                     .map {
                         case (oKlass, (succ, totl)) =>
-                            (oKlass match {
+                            oKlass match {
                                 case Some(klass) =>
-                                    s"<td class='klassname'>$klass</td>"
+                                    val (s, f) = PerClassControllerUtil.successCountAndFailCountTexts(dbname, query, klass, succ, totl - succ)
+                                    s"<td class='klassname'>$klass</td>" + s"<td>$s</td><td>$f</td>\n"
                                 case None =>
-                                    s"<td><span class='empty'>N/A</span></td>"
-                            }) + s"<td>$succ</td><td>$totl</td>\n"
+                                    s"<td><span class='empty'>N/A</span></td>" + s"<td>$succ</td><td>$totl</td>\n"
+                            }
                     }
                     .map("<tr>\n"+_+"\n</tr>")
                     .mkString("\n")

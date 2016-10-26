@@ -19,7 +19,13 @@
     *@
     <h2>@query</h2>
 
-    <a class="hint" href="@routes.PerClassController.query(dbname, query)">Per-class analysis of current objects.</a>
+    <ul class="largehint">
+        <li><a class="largehint" href='@routes.PerClassController.query(dbname, query)'>Per-class analysis of current objects.</a></li>
+        <li><a class="largehint" href='@routes.QueryController.query(dbname, s"IsNot($query)")'>IsNot(..) - Negate current query.</a></li>
+        <li><a class="largehint" href='@routes.QueryController.query(dbname, s"Deeply($query)")'>Deeply(..) - Deep query.</a></li>
+        <li><a class="largehint" href='@routes.QueryController.query(dbname, s"ReachableFrom($query)")'>ReachableFrom(..) - All objects reachable from current objects.</a></li>
+        <li><a class="largehint" href='@routes.QueryController.query(dbname, s"CanReach($query)")'>CanReach(..) - All objects that can reach the current objects.</a></li>
+    </ul>
 
     @helper.form(action = routes.QueryController.queryDataPost(dbname)) {
         <div class="result" style="overflow-y: scroll; height: 100%;">

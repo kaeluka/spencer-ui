@@ -36,7 +36,10 @@ class PerClassController @Inject()(lifecycle: ApplicationLifecycle, messagesApi 
 
     query match {
       case Right(qObj) =>
-        val objects = ProportionPerClass(qObj).analyse.collect().toSeq
+        val objects = ProportionPerClass(qObj).analyse
+          .collect()
+          .toSeq
+          .sortBy({case (_, (x, n)) => n/x.toFloat})
         Ok(views.html.perclass(dbname = dbname, query = q, data = objects))
 
       case Left(msg) =>
