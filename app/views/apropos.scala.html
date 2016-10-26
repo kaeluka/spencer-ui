@@ -37,18 +37,18 @@
             <tbody>
             @Html(
                 log.evts.map(e => {
-                    "\n<td>" + e.idx + "</td>\n"+
+                    "\n<td><span class='evtidx'>" + e.idx + "</span></td>\n"+
                     (if(e.caller != idx) {
-                        "<td>" + AproposControllerUtil.idxWithHint(dbname, e.caller) + "</td>\n"
+                        "<td>" + AproposControllerUtil.oidWithHint(dbname, e.caller) + "</td>\n"
                     } else {
                         "<td><span class='code'>this</span></td>"
                     }) +
                     (if(e.callee != idx) {
-                        "<td>" + AproposControllerUtil.idxWithHint(dbname, e.callee) + "</td>\n"
+                        "<td>" + AproposControllerUtil.oidWithHint(dbname, e.callee) + "</td>\n"
                     } else {
                         "<td><span class='code'>this</span></td>"
                     }) +
-                    "<td>" + e.msg + "</td>\n"
+                    "<td><span class='encodeddata'>" + e.msg + "</span></td>\n"
                 })
                         .map("<tr>"+_+"</tr>")
                         .mkString("\n"))
