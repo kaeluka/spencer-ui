@@ -1,3 +1,4 @@
+
 html, body {
     height: 100%;
 }
@@ -6,6 +7,34 @@ html, body, form {
     height: 85%;
 }
 
-.code {
+span.code {
     font-family: 'DejaVu Sans Mono', monospace;
 }
+
+span.encodeddata {
+    font-style: italic;
+    font-size: smaller;
+}
+
+a.hint {
+    font-size: x-small;
+}
+
+span.oid {
+    font-family: 'DejaVu Sans Mono', monospace;
+    font-weight: bold;
+}
+
+span.empty {
+    font-size: smaller;
+    color: gray;
+    font-style: italic;
+}
+
+span.evtidx {
+    font-family: 'DejaVu Sans Mono', monospace;
+    font-weight: bold;
+    font-size: small;
+    color: gray;
+}
+

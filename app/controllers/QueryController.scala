@@ -38,7 +38,7 @@ object QueryControllerUtil {
             " <a class='suggestion' href='" + routes.QueryController.query(dbname, "And("+query+ " InstanceOfClass(" + klass + "))") +"'>.. + all instances</a>"
         }
         case None => {
-          "N/A"
+          "<span class='empty'>N/A</span>"
         }
       }
 
@@ -60,9 +60,15 @@ object QueryControllerUtil {
       x =>
         "    <tr>\n" +
           "      <td><input name='chk-"+(x.id)+"' type='checkbox'/></td>\n" +
-          "      <td class=\"object-id\">" + AproposControllerUtil.idxWithHint(dbname, x.id) + "</td>\n" +
+          "      <td class=\"object-id\">" + AproposControllerUtil.oidWithHint(dbname, x.id) + "</td>\n" +
           classNameToTd(x.klass) +
-          "      <td>" + x.allocationSite.getOrElse("N/A") + "</td>\n" +
+          "      <td>" +
+          x.allocationSite
+            .filter(str => {
+              !(str.startsWith("<") || str.contains(":-1"))
+            })
+            .getOrElse("<span class='empty'>N/A</span>") +
+          "</td>\n" +
           "    </tr>"
     }.mkString("\n")
 

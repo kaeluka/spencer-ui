@@ -19,8 +19,8 @@ import play.api.inject.ApplicationLifecycle
 import scala.concurrent.Future
 
 object AproposControllerUtil {
-  def idxWithHint(dbname: String, idx: Long): String = {
-    idx+" <a href='"+routes.AproposController.apropos(dbname, idx.toString)+"'>apropos</a>"
+  def oidWithHint(dbname: String, oid: Long): String = {
+    "<span class='oid'>"+oid+"</span> <a class='hint' href='"+routes.AproposController.apropos(dbname, oid.toString)+"'>apropos</a>"
   }
 }
 /**
