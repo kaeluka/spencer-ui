@@ -10,15 +10,15 @@ import play.api.i18n.MessagesApi
 import play.api.inject.ApplicationLifecycle
 import play.api.mvc._
 
-object PerClassControllerUtil {
-  def successCountAndFailCountTexts(dbname: String, query: String, klass: String, succ: Int, fail: Int) : (String, String) = {
+object PerAllocationSiteControllerUtil {
+  def successCountAndFailCountTexts(dbname: String, query: String, allocationSite: String, succ: Int, fail: Int) : (String, String) = {
     (if (succ > 0) {
-      s"$succ <a href='${routes.QueryController.query(dbname, s"And($query InstanceOfClass($klass))")}' class='hint'>show</a>"
+      s"$succ <a href='${routes.QueryController.query(dbname, s"And($query AllocatedAt($allocationSite))")}' class='hint'>todo: show</a>"
     } else {
       succ.toString
     },
       if (fail > 0) {
-        s"$fail <a href='${routes.QueryController.query(dbname, s"And(Not($query) InstanceOfClass($klass))")}' class='hint'>show</a>"
+        s"$fail <a href='${routes.QueryController.query(dbname, s"And(Not($query) AllocatedAt($allocationSite))")}' class='hint'>show</a>"
       } else {
         fail.toString
       })
@@ -26,7 +26,7 @@ object PerClassControllerUtil {
 }
 
 @Singleton
-class PerClassController @Inject()(lifecycle: ApplicationLifecycle, messagesApi : MessagesApi, mainC: MainController) extends Controller {
+class PerAllocationSiteController @Inject()(lifecycle: ApplicationLifecycle, messagesApi : MessagesApi, mainC: MainController) extends Controller {
 
   def query(dbname: String, q: String) = Action { implicit req =>
     implicit val data: SpencerData = mainC.getDB(dbname)
@@ -36,11 +36,14 @@ class PerClassController @Inject()(lifecycle: ApplicationLifecycle, messagesApi 
 
     query match {
       case Right(qObj) =>
-        val objects = ProportionPerClass(qObj).analyse
+        val objects = ProportionPerAllocationSite(qObj).analyse
           .collect()
           .toSeq
           .sortBy({case (_, (x, n)) => n/x.toFloat})
-        Ok(views.html.perclass(dbname = dbname, query = q, data = objects))
+          .map({case ((oFile, oLine), xy) =>
+            (oFile.flatMap(file => oLine.map(line => file+":"+line)), xy)
+          })
+        Ok(views.html.perallocationsite(dbname = dbname, query = q, data = objects))
 
       case Left(msg) =>
         NotAcceptable("could not parse the query '" + q + "':\n"+msg)

@@ -2,13 +2,13 @@
 @import com.github.kaeluka.spencer.tracefiles._
 @(dbname: String, query: String, data: Seq[(Option[String], (Int, Int))])
 
-@main(s"Per Class: $query") {
+@main(s"Per Allocation Site: $query") {
 
-    <h2>Per Class: @query</h2>
+    <h2>Per Allocation Site: @query</h2>
 
 
     <h2>Proportion of Successful Instances</h2>
-    For classes with at least 10 Instances.
+    For allocation sites with at least 10 Instances.
     <div style="width: 100%; height: 400px; overflow-x: scroll; overflow-y: hidden;">
         <div id="hist" style="width=2000px; height: 250px;"></div>
     </div>
@@ -21,9 +21,9 @@
                 y: [@Html(data.filter(_._2._2 >= 10).map({case (_, (s, totl)) => s.toFloat*100/totl }).mkString(", "))],
                 type: 'bar',
                 marker: {
-                    color: 'rgba(50,171, 96, 0.7)',
+                    color: 'rgba(171, 50, 96, 0.7)',
                     line: {
-                        color: 'rgba(50,171,96,1.0)',
+                        color: 'rgba(171, 50, 96, 1.0)',
                         width: 2
                     }
                 }
@@ -35,15 +35,15 @@
                     range: [0,100]
                 }
             };
-        Plotly.newPlot(HIST, data, layout)
+            Plotly.newPlot(HIST, data, layout)
     </script>
 
-    <div class="perclass">
-        <table id="perClassResult" class="tablesorter">
+    <div class="perallocationsite">
+        <table id="perAllocationSiteResult" class="tablesorter">
             <caption>Classes with at least 10 instances.</caption>
             <thead>
                 <tr>
-                    <th>Class</th>
+                    <th>Allocation Site</th>
                     <th>Success [%]</th>
                     <th>Success [#]</th>
                     <th>Fail [#]</th>
@@ -56,7 +56,7 @@
                     case (oKlass, (succ, totl)) =>
                         oKlass match {
                             case Some(klass) =>
-                                val (s, f) = PerClassControllerUtil.successCountAndFailCountTexts(dbname, query, klass, succ, totl - succ)
+                                val (s, f) = PerAllocationSiteControllerUtil.successCountAndFailCountTexts(dbname, query, klass, succ, totl - succ)
                                 s"<td class='klassname'>$klass</td>" +
                                         s"<td>${succ.toFloat * 100 / totl}</td>\n<td>$s</td><td>$f</td>\n"
                             case None =>
@@ -69,11 +69,11 @@
             )
             </tbody>
         </table>
-        <table id="perClassResult" class="tablesorter">
-            <caption>Classes with less than 10 instances.</caption>
+        <table id="perAllocationSiteResult" class="tablesorter">
+            <caption>Allocation Sites with less than 10 instances.</caption>
             <thead>
                 <tr>
-                    <th>Class</th>
+                    <th>Allocation Site</th>
                     <th>Success [#]</th>
                     <th>Fail [#]</th>
                 </tr>
@@ -81,18 +81,18 @@
             <tbody>
             @Html(
                 data.filter({ case (_, (_, n)) => n < 10})
-                    .map {
-                        case (oKlass, (succ, totl)) =>
-                            oKlass match {
-                                case Some(klass) =>
-                                    val (s, f) = PerClassControllerUtil.successCountAndFailCountTexts(dbname, query, klass, succ, totl - succ)
-                                    s"<td class='klassname'>$klass</td>" + s"<td>$s</td><td>$f</td>\n"
-                                case None =>
-                                    s"<td><span class='empty'>N/A</span></td>" + s"<td>$succ</td><td>$totl</td>\n"
-                            }
-                    }
-                    .map("<tr>\n"+_+"\n</tr>")
-                    .mkString("\n")
+                        .map {
+                    case (oKlass, (succ, totl)) =>
+                        oKlass match {
+                            case Some(klass) =>
+                                val (s, f) = PerAllocationSiteControllerUtil.successCountAndFailCountTexts(dbname, query, klass, succ, totl - succ)
+                                s"<td><span class='allocationsite'>$klass</span></td>" + s"<td>$s</td><td>$f</td>\n"
+                            case None =>
+                                s"<td><span class='empty'>N/A</span></td>" + s"<td>$succ</td><td>$totl</td>\n"
+                        }
+                }
+                        .map("<tr>\n"+_+"\n</tr>")
+                        .mkString("\n")
             )
             </tbody>
         </table>

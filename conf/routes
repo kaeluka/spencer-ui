@@ -3,23 +3,25 @@
 # ~~~~
 
 # An example controller showing a sample home page
-GET     /                           controllers.MainController.index
+GET     /                                     controllers.MainController.index
 
-GET     /query/                     controllers.QueryController.query(n = "test", q = "Obj()")
-GET     /query/:dbname              controllers.QueryController.query(dbname, q = "Obj()")
-GET     /query/:dbname/:q           controllers.QueryController.query(dbname, q)
+GET     /query/                               controllers.QueryController.query(n = "test", q = "Obj()")
+GET     /query/:dbname                        controllers.QueryController.query(dbname, q = "Obj()")
+GET     /query/:dbname/:q                     controllers.QueryController.query(dbname, q)
 
-GET     /perclass/:dbname/:q        controllers.PerClassController.query(dbname, q)
+GET     /perclass/:dbname/:q                  controllers.PerClassController.query(dbname, q)
 
-GET     /apropos/:dbname/:oid       controllers.AproposController.apropos(dbname, oid)
+GET     /perallocationsite/:dbname/:q         controllers.PerAllocationSiteController.query(dbname, q)
+
+GET     /apropos/:dbname/:oid                 controllers.AproposController.apropos(dbname, oid)
 
 
-GET     /queryDataPost/:n           controllers.QueryController.queryDataPost(n)
+GET     /queryDataPost/:n                     controllers.QueryController.queryDataPost(n)
 
 # An example controller showing how to use dependency injection
-GET     /count                      controllers.CountController.count
+GET     /count                                controllers.CountController.count
 # An example controller showing how to write asynchronous code
-GET     /message                    controllers.AsyncController.message
+GET     /message                              controllers.AsyncController.message
 
 # Map static resources from the /public folder to the /assets URL path
-GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
+GET     /assets/*file                         controllers.Assets.versioned(path="/public", file: Asset)
