@@ -1,23 +1,6 @@
-@import controllers.QueryControllerUtil
-@*
-* This template takes a single argument, a String containing a
-* message to display.
-*@
 @(dbname: String, query: String, innerHtml: String, results: Seq[ResultObj])
 
-@*
-* Call the `main` template with two arguments. The first
-* argument is a `String` with the title of the page, the second
-* argument is an `Html` object containing the body of the page.
-*@
-@main("Result") {
-
-    @*
-    * Get an `Html` object by calling the built-in Play welcome
-    * template and passing a `String` message.
-    * @play20.welcome(message, style = "Scala")
-    *@
-    <h2>@query</h2>
+@main(s"Per Object: $query") {
 
     <ul class="largehint">
         <li><a class="largehint" href='@routes.PerClassController.query(dbname, query)'>Per-class analysis of current objects.</a></li>
@@ -27,6 +10,8 @@
         <li><a class="largehint" href='@routes.QueryController.query(dbname, s"ReachableFrom($query)")'>ReachableFrom(..) - All objects reachable from current objects.</a></li>
         <li><a class="largehint" href='@routes.QueryController.query(dbname, s"CanReach($query)")'>CanReach(..) - All objects that can reach the current objects.</a></li>
     </ul>
+
+    <h2>Per Object: @query</h2>
 
     @helper.form(action = routes.QueryController.queryDataPost(dbname)) {
         <div class="result" style="overflow-y: scroll; height: 100%;">
