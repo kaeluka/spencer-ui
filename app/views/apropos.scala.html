@@ -11,14 +11,18 @@
 * argument is a `String` with the title of the page, the second
 * argument is an `Html` object containing the body of the page.
 *@
-@main("Apropos") {
+@main("Apropos "+idx) {
 
     @*
     * Get an `Html` object by calling the built-in Play welcome
     * template and passing a `String` message.
     * @play20.welcome(message, style = "Scala")
     *@
-    <h2>Apropos/@dbname/@idx</h2>
+    <h2>Apropos @dbname :: @idx</h2>
+
+    <ul>
+        <li><a class="largehint" href='@routes.QueryController.query(dbname, s"Set($idx)")'>Set(@idx) - construct object query.</a></li>
+    </ul>
 
     <div class="apropos">
         <div>
