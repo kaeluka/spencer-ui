@@ -13,7 +13,7 @@ import play.api.mvc._
 object PerAllocationSiteControllerUtil {
   def successCountAndFailCountTexts(dbname: String, query: String, allocationSite: String, succ: Int, fail: Int) : (String, String) = {
     (if (succ > 0) {
-      s"$succ <a href='${routes.QueryController.query(dbname, s"And($query AllocatedAt($allocationSite))")}' class='hint'>todo: show</a>"
+      s"$succ <a href='${routes.QueryController.query(dbname, s"And($query AllocatedAt($allocationSite))")}' class='hint'>show</a>"
     } else {
       succ.toString
     },

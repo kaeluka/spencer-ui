@@ -6,6 +6,14 @@
 
     <h2>Per Allocation Site: @query</h2>
 
+    <ul class="largehint">
+        <li><a class="largehint" href='@routes.QueryController.query(dbname, query)'>Per-object analysis of current objects.</a></li>
+        <li><a class="largehint" href='@routes.PerClassController.query(dbname, query)'>Per-class analysis of current objects.</a></li>
+        <li><a class="largehint" href='@routes.QueryController.query(dbname, s"Not($query)")'>Not(..) - Negate current query.</a></li>
+        <li><a class="largehint" href='@routes.QueryController.query(dbname, s"Deeply($query)")'>Deeply(..) - Deep query.</a></li>
+        <li><a class="largehint" href='@routes.QueryController.query(dbname, s"ReachableFrom($query)")'>ReachableFrom(..) - All objects reachable from current objects.</a></li>
+        <li><a class="largehint" href='@routes.QueryController.query(dbname, s"CanReach($query)")'>CanReach(..) - All objects that can reach the current objects.</a></li>
+    </ul>
 
     <h2>Proportion of Successful Instances</h2>
     For allocation sites with at least 10 Instances.
