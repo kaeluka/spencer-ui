@@ -34,7 +34,11 @@ object QueryControllerUtil {
         klass +
           s" <a class='hint' href='" + routes.QueryController.query(dbname, "InstanceOfClass(" + klass + ")") +"'>all instances</a>" +
           " <a class='hint' href='" + routes.QueryController.query(dbname, "And("+query+ " InstanceOfClass(" + klass + "))") +"'>.. + all instances</a>" +
-        " <a class='hint' href='" + routes.SourceCodeController.query(dbname, klass) +"'>view source</a>"
+          (if (! klass.startsWith("[")) {
+            " <a class='hint' href='" + routes.SourceCodeController.query(dbname, klass) +"'>view source</a>"
+          } else {
+            ""
+          })
       }
       case None =>
         "<span class='empty'>N/A</span>"

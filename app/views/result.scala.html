@@ -31,7 +31,7 @@
                             x =>
                                 "    <tr class='ui-selectable-default'>\n" +
                                         "      <td><input name='chk-" + (x.id) + "' type='checkbox'/></td>\n" +
-                                        "      <td class=\"object-id\">" + AproposControllerUtil.oidWithHint(dbname, x.id) + "</td>\n" +
+                                        "      <td class=\"object-id\">" + AproposControllerUtil.oidWithHint(dbname, x.klass, x.id) + "</td>\n" +
                                         QueryControllerUtil.classNameToTd(dbname, query, x.klass) +
                                         "      <td>" +
                                         x.allocationSite

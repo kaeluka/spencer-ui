@@ -14,7 +14,8 @@ GET     /perclass/:dbname/:q                  controllers.PerClassController.que
 
 GET     /perallocationsite/:dbname/:q         controllers.PerAllocationSiteController.query(dbname, q)
 
-GET     /apropos/:dbname/:oid                 controllers.AproposController.apropos(dbname, oid)
+GET     /apropos/:dbname/:oid                 controllers.AproposController.apropos_noclass(dbname, oid)
+GET     /apropos/:dbname/:klass/:oid          controllers.AproposController.apropos_class(dbname, klass, oid)
 
 GET     /source/:dbname/:klass                controllers.SourceCodeController.query(dbname, klass)
 

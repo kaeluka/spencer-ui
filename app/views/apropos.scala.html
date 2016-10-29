@@ -4,7 +4,7 @@
 * This template takes a single argument, a String containing a
 * message to display.
 *@
-@(dbname: String, idx: Long, log: AproposData)
+@(dbname: String, klass: Option[String], idx: Long, log: AproposData, source: Option[String])
 
 @*
 * Call the `main` template with two arguments. The first
@@ -42,12 +42,12 @@
                     "\n<td><span class='evtidx'>" + e.start + "</span></td>\n"+
                     "\n<td><span class='evtidx'>" + (if (e.start+1 == e.end) { "" } else { e.end.toString }) + "</span></td>\n"+
                     (if(e.caller != idx) {
-                        "<td>" + AproposControllerUtil.oidWithHint(dbname, e.caller) + "</td>\n"
+                        "<td>" + AproposControllerUtil.oidWithHint(dbname, klass, e.caller) + "</td>\n"
                     } else {
                         "<td><span class='code'>this</span></td>"
                     }) +
                     (if(e.callee != idx) {
-                        "<td>" + AproposControllerUtil.oidWithHint(dbname, e.callee) + "</td>\n"
+                        "<td>" + AproposControllerUtil.oidWithHint(dbname, klass, e.callee) + "</td>\n"
                     } else {
                         "<td><span class='code'>this</span></td>"
                     }) +
@@ -57,5 +57,15 @@
                         .mkString("\n"))
             </tbody>
         </table>
+
+        @Html(source match {
+            case Some(src) =>
+
+                "<h2>Source for " + klass.getOrElse("BUG: unknown klass name") + "</h2>" +
+                        "<pre>\n" +
+                        src +
+                        "</pre>"
+            case None => "(no source available)"
+        })
     </div>
 }
