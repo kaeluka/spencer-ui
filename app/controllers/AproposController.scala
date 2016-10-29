@@ -23,10 +23,6 @@ object AproposControllerUtil {
     "<span class='oid'>"+oid+"</span> <a class='hint' href='"+routes.AproposController.apropos(dbname, oid.toString)+"'>apropos</a>"
   }
 }
-/**
-  * This controller creates an `Action` to handle HTTP requests to the
-  * application's home page.
-  */
 @Singleton
 class AproposController @Inject()(lifecycle: ApplicationLifecycle, messagesApi : MessagesApi, mainC: MainController) extends Controller {
 

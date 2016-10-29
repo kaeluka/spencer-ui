@@ -25,14 +25,12 @@
     </ul>
 
     <div class="apropos">
-        <div>
-            @log.alloc
-        </div>
 
         <table>
             <thead>
                 <tr>
-                    <th>Evt#</th>
+                    <th>Start</th>
+                    <th>End</th>
                     <th>Caller</th>
                     <th>Callee</th>
                     <th>Msg</th>
@@ -41,7 +39,8 @@
             <tbody>
             @Html(
                 log.evts.map(e => {
-                    "\n<td><span class='evtidx'>" + e.idx + "</span></td>\n"+
+                    "\n<td><span class='evtidx'>" + e.start + "</span></td>\n"+
+                    "\n<td><span class='evtidx'>" + (if (e.start+1 == e.end) { "" } else { e.end.toString }) + "</span></td>\n"+
                     (if(e.caller != idx) {
                         "<td>" + AproposControllerUtil.oidWithHint(dbname, e.caller) + "</td>\n"
                     } else {
@@ -52,7 +51,7 @@
                     } else {
                         "<td><span class='code'>this</span></td>"
                     }) +
-                    "<td><span class='encodeddata'>" + e.msg + "</span></td>\n"
+                    "<td><span class='encodeddata'>" + e.msg.replace("<","&lt;").replace(">","&gt;") + "</span></td>\n"
                 })
                         .map("<tr>"+_+"</tr>")
                         .mkString("\n"))

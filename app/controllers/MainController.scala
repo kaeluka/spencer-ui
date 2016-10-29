@@ -37,4 +37,8 @@ class MainController @Inject()(lifecycle: ApplicationLifecycle, messagesApi : Me
   def index = Action { implicit request =>
     Ok(views.html.index()(messagesApi.preferred(request)))
   }
+
+  def playground = Action { implicit request =>
+    Ok(views.html.playground())
+  }
 }

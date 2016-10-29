@@ -4,6 +4,7 @@
 
 # An example controller showing a sample home page
 GET     /                                     controllers.MainController.index
+GET     /playground                           controllers.MainController.playground
 
 GET     /query/                               controllers.QueryController.query(n = "test", q = "Obj()")
 GET     /query/:dbname                        controllers.QueryController.query(dbname, q = "Obj()")
