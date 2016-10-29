@@ -16,6 +16,7 @@ GET     /perallocationsite/:dbname/:q         controllers.PerAllocationSiteContr
 
 GET     /apropos/:dbname/:oid                 controllers.AproposController.apropos(dbname, oid)
 
+GET     /source/:dbname/:klass                controllers.SourceCodeController.query(dbname, klass)
 
 GET     /queryDataPost/:n                     controllers.QueryController.queryDataPost(n)
 

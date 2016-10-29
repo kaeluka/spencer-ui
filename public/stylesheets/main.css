@@ -38,6 +38,10 @@ span.evtidx {
     color: gray;
 }
 
+.code {
+    font-family: 'DejaVu Sans Mono', monospace;
+}
+
 #feedback { font-size: 1.4em; }
 #selectable .ui-selecting { background: #FECA40; }
 #selectable .ui-selected { background: #F39814; color: white; }

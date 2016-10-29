@@ -18,19 +18,16 @@ import play.api.inject.ApplicationLifecycle
 
 import scala.concurrent.Future
 
-object AproposControllerUtil {
-  def oidWithHint(dbname: String, oid: Long): String = {
-    "<span class='oid'>"+oid+"</span> <a class='hint' href='"+routes.AproposController.apropos(dbname, oid.toString)+"'>apropos</a>"
-  }
-}
 @Singleton
-class AproposController @Inject()(lifecycle: ApplicationLifecycle, messagesApi : MessagesApi, mainC: MainController) extends Controller {
+class SourceCodeController @Inject()(mainC: MainController) extends Controller {
 
-  def apropos(dbname: String, idStr: String) = Action { implicit req =>
+  def query(dbname: String, klass: String) = Action { implicit req =>
     implicit val data: SpencerData = mainC.getDB(dbname)
 
-    val query = Apropos(idStr.toLong)
+    val query = SourceCode(klass)
 
-    Ok(views.html.apropos(dbname, idStr.toLong, query.analyse))
+    val result = query.analyse
+
+    Ok(views.html.sourceCode(dbname, klass, result))
   }
 }

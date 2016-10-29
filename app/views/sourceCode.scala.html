@@ -1,61 +1,17 @@
 @import controllers.QueryControllerUtil
 @import com.github.kaeluka.spencer.tracefiles._
-@*
-* This template takes a single argument, a String containing a
-* message to display.
-*@
-@(dbname: String, idx: Long, log: AproposData)
+@(dbname: String, klass: String, oSource: Option[String])
 
-@*
-* Call the `main` template with two arguments. The first
-* argument is a `String` with the title of the page, the second
-* argument is an `Html` object containing the body of the page.
-*@
-@main("Apropos "+idx) {
+@main("Source: "+klass) {
 
-    @*
-    * Get an `Html` object by calling the built-in Play welcome
-    * template and passing a `String` message.
-    * @play20.welcome(message, style = "Scala")
-    *@
-    <h2>Apropos @dbname :: @idx</h2>
-
-    <ul>
-        <li><a class="largehint" href='@routes.QueryController.query(dbname, s"Set($idx)")'>Set(@idx) - construct object query.</a></li>
-    </ul>
-
-    <div class="apropos">
-
-        <table>
-            <thead>
-                <tr>
-                    <th>Start</th>
-                    <th>End</th>
-                    <th>Caller</th>
-                    <th>Callee</th>
-                    <th>Msg</th>
-                </tr>
-            </thead>
-            <tbody>
-            @Html(
-                log.evts.map(e => {
-                    "\n<td><span class='evtidx'>" + e.start + "</span></td>\n"+
-                    "\n<td><span class='evtidx'>" + (if (e.start+1 == e.end) { "" } else { e.end.toString }) + "</span></td>\n"+
-                    (if(e.caller != idx) {
-                        "<td>" + AproposControllerUtil.oidWithHint(dbname, e.caller) + "</td>\n"
-                    } else {
-                        "<td><span class='code'>this</span></td>"
-                    }) +
-                    (if(e.callee != idx) {
-                        "<td>" + AproposControllerUtil.oidWithHint(dbname, e.callee) + "</td>\n"
-                    } else {
-                        "<td><span class='code'>this</span></td>"
-                    }) +
-                    "<td><span class='encodeddata'>" + e.msg.replace("<","&lt;").replace(">","&gt;") + "</span></td>\n"
-                })
-                        .map("<tr>"+_+"</tr>")
-                        .mkString("\n"))
-            </tbody>
-        </table>
-    </div>
+    <h1>Source: @klass</h1>
+    @Html(
+        oSource match {
+            case Some(source) => {
+                val htmlSource = source.replace("\n", "<br/>")
+                s"<pre class='code'>$htmlSource</pre>"
+            }
+            case None => "Source not found"
+        }
+    )
 }

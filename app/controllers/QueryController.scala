@@ -32,15 +32,15 @@ object QueryControllerUtil {
     val inner = optKlass match {
       case Some(klass) => {
         klass +
-          " <a class='suggestion' href='" + routes.QueryController.query(dbname, "InstanceOfClass(" + klass + ")") +"'>all instances</a>" +
-          " <a class='suggestion' href='" + routes.QueryController.query(dbname, "And("+query+ " InstanceOfClass(" + klass + "))") +"'>.. + all instances</a>"
+          s" <a class='hint' href='" + routes.QueryController.query(dbname, "InstanceOfClass(" + klass + ")") +"'>all instances</a>" +
+          " <a class='hint' href='" + routes.QueryController.query(dbname, "And("+query+ " InstanceOfClass(" + klass + "))") +"'>.. + all instances</a>" +
+        " <a class='hint' href='" + routes.SourceCodeController.query(dbname, klass) +"'>view source</a>"
       }
-      case None => {
+      case None =>
         "<span class='empty'>N/A</span>"
-      }
     }
 
-    "      <td>"+inner+"</td>\n"
+    s"      <td>$inner</td>\n"
   }
 
 }
