@@ -1,0 +1,110 @@
+@(dbname: String, query: String, data: Seq[(Long, (Long, Long))])
+
+@main(s"Timing: $query") {
+
+    <ul class="largehint">
+        <li><a class="largehint" href='@routes.QueryController.query(dbname, query)'>Per-object analysis of current objects.</a></li>
+        <li><a class="largehint" href='@routes.PerAllocationSiteController.query(dbname, query)'>Per-allocation-site analysis of current objects.</a></li>
+        <li><a class="largehint" href='@routes.PerClassController.query(dbname, s"Not($query)")'>Not(..) - Negate current query.</a></li>
+        <li><a class="largehint" href='@routes.PerClassController.query(dbname, s"Deeply($query)")'>Deeply(..) - Deep query.</a></li>
+        <li><a class="largehint" href='@routes.PerClassController.query(dbname, s"ReachableFrom($query)")'>ReachableFrom(..) - All objects reachable from current objects.</a></li>
+        <li><a class="largehint" href='@routes.PerClassController.query(dbname, s"CanReach($query)")'>CanReach(..) - All objects that can reach the current objects.</a></li>
+    </ul>
+
+    <h2>Timing: @query</h2>
+
+    <h2>Duration</h2>
+    Number of events from creation to last usage.
+    <div style="width: 100%; height: 400px; overflow-x: scroll; overflow-y: hidden;">
+        <div id="lifetimeHist" style="width=2000px; height: 250px;"></div>
+    </div>
+
+    <script>
+            var data = [{
+
+                x: [@Html(data.map({case (_, (from, to)) => to - from }).mkString(", "))],
+                type: 'histogram',
+                marker: {
+                    color: 'rgba(50, 96, 171, 0.7)',
+
+                    line: {
+                        color: 'rgba(50, 96, 171, 1.0)',
+                        width: 2
+                    }
+                }
+            }];
+            var layout = {
+                autosize: true,
+                width: 2000,
+                yaxis: {
+                    range: [0,100]
+                }
+            };
+            Plotly.newPlot(document.getElementById('lifetimeHist'), data, layout)
+    </script>
+
+    <h2>Allocation and Last Usage Time</h2>
+    <div style="width: 100%; height: 400px; overflow-x: scroll; overflow-y: hidden;">
+        <div id="alloctimeHist" style="width=2000px; height: 250px;"></div>
+    </div>
+
+    <script>
+            var allocTimeData = [{
+                x: [@Html(data.map({case (_, (from, _)) => from }).mkString(", "))],
+                type: 'histogram',
+                name: 'allocations',
+                marker: {
+                    color: 'rgba(50, 96, 171, 0.7)',
+                    line: {
+                        color: 'rgba(50, 96, 171, 1.0)',
+                        width: 2
+                    }
+                }
+            }, {
+                x: [@Html(data.map({case (_, (_, to)) => to }).mkString(", "))],
+                type: 'histogram',
+                name: 'last usages',
+                marker: {
+                    color: 'rgba(150, 96, 171, 0.7)',
+                    line: {
+                        color: 'rgba(150, 96, 171, 1.0)',
+                        width: 2
+                    }
+                }
+            }];
+            var layout = {
+                autosize: true,
+                width: 2000,
+                yaxis: {
+                    range: [0,100]
+                }
+            };
+            Plotly.newPlot(document.getElementById('alloctimeHist'), allocTimeData, layout)
+//            Plotly.newPlot(document.getElementById('lastusetimeHist'), lastUseTimeData, layout)
+    </script>
+
+    <div class="perclass">
+        <table id="perClassResult" class="tablesorter">
+            <caption>..todo..</caption>
+            <thead>
+                <tr>
+                    <th>Obj. ID</th>
+                    <th>Allocated</th>
+                    <th>Last Use</th>
+                    <th>Total Lifetime</th>
+                </tr>
+            </thead>
+            <tbody>
+            @Html(
+                data.filter({ case (_, (_, n)) => n >= 10})
+                        .map {
+                    case (oid, (from, to)) =>
+                        s"<td>$oid</td><td>$from</td><td>$to</td><td>${to-from}</td>\n"
+                }
+                        .map("<tr>\n"+_+"\n</tr>")
+                        .mkString("\n")
+            )
+            </tbody>
+        </table>
+    </div>
+}

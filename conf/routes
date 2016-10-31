@@ -11,7 +11,7 @@ GET     /query/:dbname                        controllers.QueryController.query(
 GET     /query/:dbname/:q                     controllers.QueryController.query(dbname, q)
 
 GET     /perclass/:dbname/:q                  controllers.PerClassController.query(dbname, q)
-
+GET     /timing/:dbname/:q                    controllers.TimingController.query(dbname, q)
 GET     /perallocationsite/:dbname/:q         controllers.PerAllocationSiteController.query(dbname, q)
 
 GET     /apropos/:dbname/:oid                 controllers.AproposController.apropos_noclass(dbname, oid)
