@@ -1,6 +1,7 @@
-@(dbname: String, query: String, data: Seq[(Option[String], (Int, Int))])
+@(dbname: String, query: String, dataSets: Seq[PerClassData])
+@import play.api.libs.json.Json
 
-@main(s"Per Class: $query") {
+@main(s"Per Class Analysis") {
 
     <ul class="largehint">
         <li><a class="largehint" href='@routes.QueryController.query(dbname, query)'>Per-object analysis of current objects.</a></li>
@@ -12,71 +13,121 @@
         <li><a class="largehint" href='@routes.PerClassController.query(dbname, s"CanReach($query)")'>CanReach(..) - All objects that can reach the current objects.</a></li>
     </ul>
 
-    <h2>Per Class: @query</h2>
+    <h1>Per Class: @query.replace("/", " vs. ")</h1>
 
     <h2>Proportion of Successful Instances</h2>
     For classes with at least 10 Instances.
-    <div style="width: 100%; height: 400px; overflow-x: scroll; overflow-y: hidden;">
-        <div id="hist" style="width=2000px; height: 250px;"></div>
+    <div id="barchart" style="width=100%; height: 250px;"></div>
+    <div style="width: 100%; height: 400px; overflow-x: scroll; overflow-y: scroll;">
+    <div id="scatterchart" style="width=1000px; height: 350px;"></div>
     </div>
 
     <script>
-            HIST = document.getElementById('hist');
-            var data = [{
+            var colors = randomColor({seed: 123, count: @dataSets.size});
+            var bardata = [];
 
-                x: [@Html(data.filter(_._2._2 >= 10).map({case (klass, (_, _)) => klass.map("'"+_+"'").getOrElse("'N/A'") }).mkString(", "))],
-                y: [@Html(data.filter(_._2._2 >= 10).map({case (_, (s, totl)) => s.toFloat*100/totl }).mkString(", "))],
+            @for(dataSet <- dataSets) {
+            bardata.push({
+                x: [@Html(dataSet.data.filter(_.total >= 10).map(_.klass.map("'"+_+"'").getOrElse("'N/A'")).mkString(", "))],
+                y: [@Html(dataSet.data.filter(_.total >= 10).map(item => item.succ.toFloat*100/item.total).mkString(", "))],
                 type: 'bar',
+                name: '@dataSet.query',
                 marker: {
-                    color: 'rgba(50,171, 96, 0.7)',
+                    color: colors[bardata.length],
                     line: {
-                        color: 'rgba(50,171,96,1.0)',
+                        color: 'black'
+                    }
+                }
+            });
+            }
+
+            var barlayout = {
+//                autosize: true,
+//                width: 2000,
+                barmode: 'stack',
+//                yaxis: {
+//                    range: [0,100]
+//                }
+            };
+
+            var i = 0;
+            var scatterdata = [];
+            @for(klass <- dataSets.map(_.data.flatMap(_.klass).toSet).foldLeft(Set[String]())(_ union _)) {
+            // klass = @klass
+            scatterdata.push({
+                x: [@Html(dataSets.map(_.query).mkString("'", "', '", "'"))],
+                y: [@Html(dataSets
+                        .map(_.data.find(_.klass.contains(klass)).map(it=>it.succ.toFloat*100/it.total))
+                        .map(_.getOrElse(50)).mkString(","))],
+                mode: 'lines',
+                hoverinfo: 'y',
+                name: '@klass',
+                opacity: 0.08,
+                marker: {
+                    color: 'grey',
+                    line: {
+                        color: 'black',
                         width: 2
                     }
                 }
-            }];
-            var layout = {
-                autosize: true,
-                width: 2000,
+            });
+            i = i+1;
+            }
+
+            var scatterlayout = {
+//                autosize: true,
+//                width: 2000,
                 yaxis: {
                     range: [0,100]
-                }
+                },
+                showlegend: false,
+                hovermode: 'closest',
             };
-        Plotly.newPlot(HIST, data, layout)
+            Plotly.newPlot(document.getElementById('barchart'), bardata, barlayout);
+            Plotly.newPlot(document.getElementById('scatterchart'), scatterdata, scatterlayout);
+//            document.getElementById('scatterchart').hoverinfo('y');
+            document.getElementById('scatterchart').on('plotly_hover', function (eventData) {
+//                console.log(eventData);
+                var len = eventData.points[0].data.x.length;
+                var highlightedPoints = [];
+                for (var p=0; p<eventData.points.length; p++) {
+                    for (var i=0; i<len; i++) {
+                        highlightedPoints.push({
+                            curveNumber: eventData.points[p].curveNumber,
+                            pointNumber: i
+                        })
+                    }
+                }
+//                console.log(highlightedPoints);
+                Plotly.Fx.hover('scatterchart', highlightedPoints);
+            });
     </script>
 
-    <div class="perclass">
-        <table id="perClassResult" class="tablesorter">
-            <caption>Classes with at least 10 instances.</caption>
-            <thead>
-                <tr>
-                    <th>Class</th>
-                    <th>Success [%]</th>
-                    <th>Success [#]</th>
-                    <th>Fail [#]</th>
-                </tr>
-            </thead>
-            <tbody>
-            @Html(
-                data.filter({ case (_, (_, n)) => n >= 10})
-                        .map {
-                    case (oKlass, (succ, totl)) =>
-                        oKlass match {
-                            case Some(klass) =>
-                                val (s, f) = PerClassControllerUtil.successCountAndFailCountTexts(dbname, query, klass, succ, totl - succ)
-                                s"<td class='klassname'>$klass</td>" +
-                                        s"<td>${succ.toFloat * 100 / totl}</td>\n<td>$s</td><td>$f</td>\n"
-                            case None =>
-                                s"<td><span class='empty'>N/A</span></td>" +
-                                        s"<td>${succ.toFloat * 100 / totl}</td>\n<td>$succ</td><td>${totl - succ}</td>\n"
-                        }
+    @for(dataSet <- dataSets) {
+        <h2>@dataSet.query</h2>
+        <div class="perclass">
+            <table id="perClassResult@dataSet.query" class="tablesorter">
+                <caption>Classes with at least 10 instances.</caption>
+                <thead>
+                    <tr>
+                        <th>Class</th>
+                        <th>Success [%]</th>
+                        <th>Success [#]</th>
+                        <th>Fail [#]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @for(item <- dataSet.data.filter(item => item.klass.isDefined && item.total >= 10)) {
+                    <tr>
+                        <td>@item.klass.get</td>
+                        <td>@(item.succ.toFloat * 100 / item.total)</td>
+                        <td>@(item.succ)</td>
+                        <td>@(item.total - item.succ)</td>
+                    </tr>
                 }
-                        .map("<tr>\n"+_+"\n</tr>")
-                        .mkString("\n")
-            )
-            </tbody>
-        </table>
-        <table id="perClassResult" class="tablesorter">
+                </tbody>
+            </table>
+                <!--table id="perClassResult" class="tablesorter">
             <caption>Classes with less than 10 instances.</caption>
             <thead>
                 <tr>
@@ -86,22 +137,23 @@
                 </tr>
             </thead>
             <tbody>
-            @Html(
-                data.filter({ case (_, (_, n)) => n < 10})
+             @Html(
+            dataSets(0).data.filter(_.total < 10)
                     .map {
-                        case (oKlass, (succ, totl)) =>
-                            oKlass match {
-                                case Some(klass) =>
-                                    val (s, f) = PerClassControllerUtil.successCountAndFailCountTexts(dbname, query, klass, succ, totl - succ)
-                                    s"<td class='klassname'>$klass</td>" + s"<td>$s</td><td>$f</td>\n"
-                                case None =>
-                                    s"<td><span class='empty'>N/A</span></td>" + s"<td>$succ</td><td>$totl</td>\n"
-                            }
+                case PerClassDataItem(oKlass, succ, totl) =>
+                    oKlass match {
+                        case Some(klass) =>
+                            val (s, f) = PerClassControllerUtil.successCountAndFailCountTexts(dbname, query, klass, succ, totl - succ)
+                            s"<td class='klassname'>$klass</td>" + s"<td>$s</td><td>$f</td>\n"
+                        case None =>
+                            s"<td><span class='empty'>N/A</span></td>" + s"<td>$succ</td><td>$totl</td>\n"
                     }
-                    .map("<tr>\n"+_+"\n</tr>")
+            }
+                    .map("<tr>\n" + _ + "\n</tr>")
                     .mkString("\n")
-            )
+        )
             </tbody>
-        </table>
-    </div>
+            </table-->
+        </div>
+    }
 }

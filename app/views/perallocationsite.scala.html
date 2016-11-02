@@ -1,6 +1,6 @@
 @import controllers.QueryControllerUtil
 @import com.github.kaeluka.spencer.tracefiles._
-@(dbname: String, query: String, data: Seq[(Option[String], (Int, Int))])
+@(dbname: String, query: String, dataSets: Seq[PerAllocationSiteData])
 
 @main(s"Per Allocation Site: $query") {
 
@@ -14,40 +14,45 @@
         <li><a class="largehint" href='@routes.PerAllocationSiteController.query(dbname, s"CanReach($query)")'>CanReach(..) - All objects that can reach the current objects.</a></li>
     </ul>
 
-    <h2>Per Allocation Site: @query</h2>
+    <h2>Per Allocation Site: @query.replace("/", " vs. ")</h2>
 
     <h2>Proportion of Successful Instances</h2>
     For allocation sites with at least 10 Instances.
-    <div style="width: 100%; height: 400px; overflow-x: scroll; overflow-y: hidden;">
-        <div id="hist" style="width=2000px; height: 250px;"></div>
-    </div>
+    <div id="hist" style="width=2000px; height: 250px;"></div>
 
     <script>
             HIST = document.getElementById('hist');
-            var data = [{
+            var data = [];
+            var colors = randomColor({hue: 'purple', seed: 1234, count: @dataSets.size});
 
-                x: [@Html(data.filter(_._2._2 >= 10).map({case (klass, (_, _)) => klass.map("'"+_+"'").getOrElse("'N/A'") }).mkString(", "))],
-                y: [@Html(data.filter(_._2._2 >= 10).map({case (_, (s, totl)) => s.toFloat*100/totl }).mkString(", "))],
+            @for(dataSet <- dataSets) {
+            data.push({
+                x: [@Html(dataSet.data.filter(_.total >= 10).map({_.allocationsite.map("'"+_+"'").getOrElse("'N/A'") }).mkString(", "))],
+                y: [@Html(dataSet.data.filter(_.total >= 10).map(it=>it.succ.toFloat*100/it.total).mkString(", "))],
                 type: 'bar',
+                name: '@dataSet.query',
                 marker: {
-                    color: 'rgba(171, 50, 96, 0.7)',
+                    color: colors[data.length],
                     line: {
-                        color: 'rgba(171, 50, 96, 1.0)',
-                        width: 2
+                        color: 'black',
+                        width: 1
                     }
                 }
-            }];
+            });
+            }
             var layout = {
-                autosize: true,
-                width: 2000,
-                yaxis: {
-                    range: [0,100]
-                }
+//                autosize: true,
+//                width: 2000,
+                barmode: 'stack'
+//                yaxis: {
+//                    range: [0,100]
+//                }
             };
             Plotly.newPlot(HIST, data, layout)
     </script>
 
-    <div class="perallocationsite">
+    @for(dataSet <- dataSets) {
+    <div class="perallocationsite@(dataSet.query)">
         <table id="perAllocationSiteResult" class="tablesorter">
             <caption>Classes with at least 10 instances.</caption>
             <thead>
@@ -60,50 +65,20 @@
             </thead>
             <tbody>
             @Html(
-                data.filter({ case (_, (_, n)) => n >= 10})
-                        .map {
-                    case (oKlass, (succ, totl)) =>
-                        oKlass match {
-                            case Some(klass) =>
-                                val (s, f) = PerAllocationSiteControllerUtil.successCountAndFailCountTexts(dbname, query, klass, succ, totl - succ)
-                                s"<td class='klassname'>$klass</td>" +
-                                        s"<td>${succ.toFloat * 100 / totl}</td>\n<td>$s</td><td>$f</td>\n"
-                            case None =>
-                                s"<td><span class='empty'>N/A</span></td>" +
-                                        s"<td>${succ.toFloat * 100 / totl}</td>\n<td>$succ</td><td>${totl - succ}</td>\n"
-                        }
+                dataSet.data.filter(_.total >= 10).map {
+                    case PerAllocationSiteDataItem(Some(allocationsite), succ, total) =>
+                        val (s, f) = PerAllocationSiteControllerUtil.successCountAndFailCountTexts(dbname, query, allocationsite, succ, total - succ)
+                        s"<td class='klassname'>$allocationsite</td>" +
+                                s"<td>${succ.toFloat * 100 / total}</td>\n<td>$s</td><td>$f</td>\n"
+                    case PerAllocationSiteDataItem(None, succ, total) =>
+                        s"<td><span class='empty'>N/A</span></td>" +
+                                s"<td>${succ.toFloat * 100 / total}</td>\n<td>$succ</td><td>${total - succ}</td>\n"
                 }
                         .map("<tr>\n"+_+"\n</tr>")
                         .mkString("\n")
             )
             </tbody>
         </table>
-        <table id="perAllocationSiteResult" class="tablesorter">
-            <caption>Allocation Sites with less than 10 instances.</caption>
-            <thead>
-                <tr>
-                    <th>Allocation Site</th>
-                    <th>Success [#]</th>
-                    <th>Fail [#]</th>
-                </tr>
-            </thead>
-            <tbody>
-            @Html(
-                data.filter({ case (_, (_, n)) => n < 10})
-                        .map {
-                    case (oKlass, (succ, totl)) =>
-                        oKlass match {
-                            case Some(klass) =>
-                                val (s, f) = PerAllocationSiteControllerUtil.successCountAndFailCountTexts(dbname, query, klass, succ, totl - succ)
-                                s"<td><span class='allocationsite'>$klass</span></td>" + s"<td>$s</td><td>$f</td>\n"
-                            case None =>
-                                s"<td><span class='empty'>N/A</span></td>" + s"<td>$succ</td><td>$totl</td>\n"
-                        }
-                }
-                        .map("<tr>\n"+_+"\n</tr>")
-                        .mkString("\n")
-            )
-            </tbody>
-        </table>
+        }
     </div>
 }

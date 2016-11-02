@@ -8,7 +8,11 @@ import org.apache.spark.graphx.VertexId
 import org.apache.spark.rdd.RDD
 import play.api.i18n.MessagesApi
 import play.api.inject.ApplicationLifecycle
+import play.api.libs.json.Json
 import play.api.mvc._
+
+case class PerClassDataItem(klass: Option[String], succ: Int, total: Int)
+case class PerClassData(dbname: String, query: String, data: Seq[PerClassDataItem])
 
 object PerClassControllerUtil {
   def successCountAndFailCountTexts(dbname: String, query: String, klass: String, succ: Int, fail: Int) : (String, String) = {
@@ -30,20 +34,32 @@ class PerClassController @Inject()(lifecycle: ApplicationLifecycle, messagesApi 
 
   def query(dbname: String, q: String) = Action { implicit req =>
     implicit val data: SpencerData = mainC.getDB(dbname)
+    val qs: Array[String] = q.split("/")
 
-    val query: Either[String, SpencerAnalyser[RDD[VertexId]]] = QueryParser.parseObjQuery(q)
-    println("================================ "+q+" -parsed-> "+query.toString)
-
-    query match {
-      case Right(qObj) =>
-        val objects = ProportionPerClass(qObj).analyse
-          .collect()
-          .toSeq
-          .sortBy({case (_, (x, n)) => n/x.toFloat})
-        Ok(views.html.perclass(dbname = dbname, query = q, data = objects))
-
-      case Left(msg) =>
-        NotAcceptable("could not parse the query '" + q + "':\n"+msg)
+    val queries = qs.map(QueryParser.parseObjQuery(_))
+    if (queries.exists(_.isLeft)) {
+      NotAcceptable("could not parse the query '" + q + "':\n"+queries.filter(_.isLeft).mkString(", "))
+    } else {
+      val results = queries.map { case Right(query) => (query.toString, ProportionPerClass(query)
+        .analyse.collect
+        .map { case (oKlass, (succ, total)) => PerClassDataItem(oKlass, succ, total) }
+        .toSeq
+        .sortBy(item => item.total.toFloat/item.succ)
+        )}.toSeq
+      Ok(views.html.perclass(dbname, query = q, results.map({case (q, result) => PerClassData(dbname, q, result)})))
     }
+
+//    query match {
+//      case Right(qObj) =>
+//        val result = ProportionPerClass(qObj).analyse
+//          .collect()
+//          .map({case (oKlass, (succ, total)) => PerClassDataItem(oKlass, succ, total)})
+//          .toSeq
+//          .sortBy(item => item.total.toFloat/item.succ)
+//        Ok(views.html.perclass(dbname = dbname, query = q, List(PerClassData(dbname, q, result), PerClassData(dbname, q, result))))
+//
+//      case Left(msg) =>
+//        NotAcceptable()
+//    }
   }
 }

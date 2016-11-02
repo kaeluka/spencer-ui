@@ -25,28 +25,33 @@ object PerAllocationSiteControllerUtil {
   }
 }
 
-@Singleton
-class PerAllocationSiteController @Inject()(lifecycle: ApplicationLifecycle, messagesApi : MessagesApi, mainC: MainController) extends Controller {
+case class PerAllocationSiteDataItem(allocationsite: Option[String],succ: Int, total: Int)
+case class PerAllocationSiteData(query: String, data: Seq[PerAllocationSiteDataItem])
 
-  def query(dbname: String, q: String) = Action { implicit req =>
+@Singleton
+class PerAllocationSiteController @Inject()(lifecycle: ApplicationLifecycle, messagesApi: MessagesApi, mainC: MainController) extends Controller {
+
+  def query(dbname: String, qs: String) = Action { implicit req =>
     implicit val data: SpencerData = mainC.getDB(dbname)
 
-    val query: Either[String, SpencerAnalyser[RDD[VertexId]]] = QueryParser.parseObjQuery(q)
-    println("================================ "+q+" -parsed-> "+query.toString)
+    val queries = qs.split("/").map(QueryParser.parseObjQuery(_))
+    println("================================ " + qs + " -parsed-> " + queries.mkString(" / "))
+    if (queries.exists(_.isLeft)) {
+      NotAcceptable("could not parse the query '" + qs + "':\n" + queries.filter(_.isLeft).mkString(", "))
+    } else {
+      val results = queries.map({
+        case Right(query) =>
+          PerAllocationSiteData(query.toString, ProportionPerAllocationSite(query)
+            .analyse
+            .collect
+            .toSeq
+            .sortBy({ case (_, (x, n)) => n / x.toFloat })
+            .map({case ((oFile, oLine), (x, y)) =>
+              PerAllocationSiteDataItem(oFile.flatMap(file => oLine.map(line => file+":"+line)), x, y)
+            })
+          )})
+      Ok(views.html.perallocationsite(dbname, qs, results))
 
-    query match {
-      case Right(qObj) =>
-        val objects = ProportionPerAllocationSite(qObj).analyse
-          .collect()
-          .toSeq
-          .sortBy({case (_, (x, n)) => n/x.toFloat})
-          .map({case ((oFile, oLine), xy) =>
-            (oFile.flatMap(file => oLine.map(line => file+":"+line)), xy)
-          })
-        Ok(views.html.perallocationsite(dbname = dbname, query = q, data = objects))
-
-      case Left(msg) =>
-        NotAcceptable("could not parse the query '" + q + "':\n"+msg)
     }
   }
 }
