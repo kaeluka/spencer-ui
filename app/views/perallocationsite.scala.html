@@ -23,7 +23,7 @@
     <script>
             HIST = document.getElementById('hist');
             var data = [];
-            var colors = randomColor({hue: 'purple', seed: 1234, count: @dataSets.size});
+            var colors = randomColor({seed: 123, count: @dataSets.size});
 
             @for(dataSet <- dataSets) {
             data.push({

@@ -19,6 +19,7 @@
 
         <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
         <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+        <script src="https://d3js.org/d3.v4.min.js"></script>
         <link rel="stylesheet" href="@routes.Assets.versioned("stylesheets/blue/style.css")" type="text/css" media="print, projection, screen" />
 
         <script type="text/javascript">
@@ -34,31 +35,120 @@
                     });
                 } );
         </script>
+        <style>
+
+        body {
+            font: 10px sans-serif;
+        }
+
+        .group-tick line {
+            stroke: #000;
+        }
+
+        .ribbons {
+            fill-opacity: 0.67;
+        }
+
+        </style>
     </head>
     <body>
         <h1>Playground</h1>
-        <table>
-            <tr>
-                <td>foo</td>
-                <td>1</td>
-            </tr>
-            <tr>
-                <td>bar</td>
-                <td>2</td>
-            </tr>
-        </table>
 
-        <p id="feedback">
-            <span>You've selected:</span> <span id="select-result">none</span>.
-        </p>
+        <script>
+//            var DATA = [4, 8, 15, 16, 23, 42];
 
-        <ol id="selectable">
-            <li class="ui-state-default">Item 1</li>
-            <li class="ui-state-default">Item 2</li>
-            <li class="ui-state-default">Item 3</li>
-            <li class="ui-state-default">Item 4</li>
-            <li class="ui-state-default">Item 5</li>
-            <li class="ui-state-default">Item 6</li>
-        </ol>
+        </script>
+
+        <style>
+        .chart rect {
+            fill: steelblue;
+        }
+
+        .bar:hover {
+            fill: brown;
+        }
+
+        .chart text {
+            fill: #ffffff;
+            font: 10px sans-serif;
+            text-anchor: end;
+        }
+        .axis text {
+            font: 10px sans-serif;
+        }
+
+        .axis path,
+        .axis line {
+            fill: none;
+            stroke: #000;
+            shape-rendering: crispEdges;
+        }
+        </style>
+
+        <svg class="chart" width="420" height="500">
+        </svg>
+
+
+        <script>
+
+                var
+                        width = 420,
+                        height = 500,
+                        barWidth = 20,
+                        margin = {top: 20, bottom: 20, left: 20, right: 20};
+
+                var x = d3.scaleBand()
+                        .domain(["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "M", "N", "O",
+                        "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"])
+                        .range([0, width]);
+
+                var y = d3.scaleLinear()
+                        .range([height, 0]);
+
+                var chart = d3.select(".chart")
+                        .attr("width", width+margin.left+margin.right)
+                        .append("g")
+                        .attr("transform", "translate("+margin.left +","+margin.top+")");
+
+                d3.tsv("@routes.Assets.versioned("test.tsv")", type, function(error, data) {
+                    console.log(data);
+                    y.domain([0, d3.max(data, function(d) { return d.value; })]);
+                    var bar = chart.selectAll("g")
+                            .data(data)
+                            .enter()
+                            .append("g")
+                            .attr("transform", function(d, i) { return "translate("+i*barWidth+",0)"; });
+
+                    bar.append("rect")
+                            .attr("class", "bar")
+                            .attr("height", function(d) {
+                                console.log("h="+d.value);
+                                console.log(y(+d.value));
+                                console.log(height);
+                                console.log(height - y(+d.value));
+                                return height - y(+d.value);
+                            })
+                            .attr("y", function (d) { return y(+d.value); })
+                            .attr("width", x.bandwidth());
+//                    bar.append("text")
+//                            .attr("y", function(d) { return height - 15 ; })
+//                            .attr("x", x.bandwidth()/2)
+//                            .attr("dx", ".35em")
+//                            .text(function(d) { return d.value; });
+                    chart.append("g")
+                            .attr("transform", "translate(0, "+(height-40)+")")
+                            .call(d3.axisBottom(x));
+                    chart.append("g")
+                            .call(d3.axisLeft(y));
+                    console.log("todo: make axis work");
+
+                });
+
+                function type(d) {
+                    d.value = +d.value;
+                    return d;
+                }
+
+        </script>
     </body>
 </html>

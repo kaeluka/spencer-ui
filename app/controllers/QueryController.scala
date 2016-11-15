@@ -18,19 +18,15 @@ import play.api.inject.ApplicationLifecycle
 
 import scala.concurrent.Future
 
-case class QueryData(dbname: String, query: String)
-
-case class ResultObj(id: Long, klass: Option[String], allocationSite: Option[String])
-
-case class ResultsForm(dbname: String, query: String, results: List[ResultObj], selection: List[Boolean])
-
+case class QueryDataItem(oid: VertexId, klass: Option[String], allocationSite: Option[String])
+case class QueryData(dbname: String, query: String, data: Seq[QueryDataItem])
 
 object QueryControllerUtil {
 
   def classNameToTd(dbname: String, query: String, optKlass: Option[String]): String = {
 
     val inner = optKlass match {
-      case Some(klass) => {
+      case Some(klass) =>
         klass +
           s" <a class='hint' href='" + routes.QueryController.query(dbname, "InstanceOfClass(" + klass + ")") +"'>all instances</a>" +
           " <a class='hint' href='" + routes.QueryController.query(dbname, "And("+query+ " InstanceOfClass(" + klass + "))") +"'>.. + all instances</a>" +
@@ -39,7 +35,6 @@ object QueryControllerUtil {
           } else {
             ""
           })
-      }
       case None =>
         "<span class='empty'>N/A</span>"
     }
@@ -62,20 +57,23 @@ class QueryController @Inject()(lifecycle: ApplicationLifecycle, messagesApi : M
     Redirect(routes.QueryController.query("test", "Set("+selected+")"))
   }
 
-  def query(dbname: String, q: String) = Action { implicit req =>
+  def query(dbname: String, qs: String) = Action { implicit req =>
     implicit val data: SpencerData = mainC.getDB(dbname)
     //
-    val query: Either[String, SpencerAnalyser[RDD[VertexId]]] = QueryParser.parseObjQuery(q)
-    println("================================ "+q+" -parsed-> "+query.toString)
+    val queries = qs.split("/").map(QueryParser.parseObjQuery(_))
 
-    query match {
-      case Right(qObj) =>
-        val objects = WithMetaInformation(qObj).analyse.collect().map(ResultObj.tupled).toList
-
-        Ok(views.html.result(dbname, q, "", objects))
-
-      case Left(msg) =>
-        NotAcceptable("could not parse the query '" + q + "':\n"+msg)
+    if (queries.exists(_.isLeft)) {
+      NotAcceptable("could not parse the query '" + qs + "':\n"+queries.filter(_.isLeft).mkString(", "))
+    } else {
+      println("================================ "+qs+" -parsed-> "+queries.mkString(", "))
+       val results = queries.map {
+         case Right(qObj) =>
+           val objects = WithMetaInformation(qObj).analyse.collect().map(QueryDataItem.tupled).toList
+           QueryData(dbname, qObj.toString, objects)
+       }
+       val allObjs = Obj().analyse.collect.toSet
+       Ok(views.html.result(dbname, qs, "todo: remove", allObjs, results))
     }
   }
 }
+
