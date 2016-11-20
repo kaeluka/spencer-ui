@@ -19,10 +19,14 @@
     For classes with at least 10 Instances.
     <div id="barchart" style="width=100%; height: 250px;"></div>
     <div style="width: 100%; height: 400px; overflow-x: scroll; overflow-y: scroll;">
-        <div id="scatterchart" style="width=1000px; height: 350px;"></div>
+    <div id="scatterchart" style="width=1000px; height: 350px;"></div>
     </div>
 
     <script>
+            var COMMAND = "perclass";
+            var DBNAME  = "@dbname";
+            var QUERIES = [@Html(dataSets.map("'"+_.query+"'").mkString(", "))];
+
             var colors = randomColor({seed: 123, count: @dataSets.size});
             var bardata = [];
 
@@ -50,6 +54,9 @@
 //                }
             };
 
+            Plotly.newPlot(document.getElementById('barchart'), bardata, barlayout);
+
+            @if(dataSets.size >= 2) {
             var i = 0;
             var scatterdata = [];
             @for(klass <- dataSets.map(_.data.flatMap(_.klass).toSet).foldLeft(Set[String]())(_ union _)) {
@@ -71,27 +78,27 @@
                     }
                 }
             });
-            i = i+1;
+            i = i + 1;
             }
 
             var scatterlayout = {
 //                autosize: true,
 //                width: 2000,
                 yaxis: {
-                    range: [0,100]
+                    range: [0, 100]
                 },
                 showlegend: false,
                 hovermode: 'closest',
             };
-            Plotly.newPlot(document.getElementById('barchart'), bardata, barlayout);
             Plotly.newPlot(document.getElementById('scatterchart'), scatterdata, scatterlayout);
-//            document.getElementById('scatterchart').hoverinfo('y');
+
+            //            document.getElementById('scatterchart').hoverinfo('y');
             document.getElementById('scatterchart').on('plotly_hover', function (eventData) {
 //                console.log(eventData);
                 var len = eventData.points[0].data.x.length;
                 var highlightedPoints = [];
-                for (var p=0; p<eventData.points.length; p++) {
-                    for (var i=0; i<len; i++) {
+                for (var p = 0; p < eventData.points.length; p++) {
+                    for (var i = 0; i < len; i++) {
                         highlightedPoints.push({
                             curveNumber: eventData.points[p].curveNumber,
                             pointNumber: i
@@ -101,6 +108,7 @@
 //                console.log(highlightedPoints);
                 Plotly.Fx.hover('scatterchart', highlightedPoints);
             });
+            }
     </script>
 
     @for(dataSet <- dataSets) {
@@ -119,7 +127,7 @@
                 <tbody>
                 @for(item <- dataSet.data.filter(item => item.klass.isDefined && item.total >= 10)) {
                     <tr>
-                        <td>@item.klass.get</td>
+                        <td><span class="klassname">@item.klass.get</span></td>
                         <td>@(item.succ.toFloat * 100 / item.total)</td>
                         <td>@(item.succ)</td>
                         <td>@(item.total - item.succ)</td>

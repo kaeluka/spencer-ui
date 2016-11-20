@@ -24,6 +24,12 @@
 
     <h1>Per Object: @query</h1>
 
+    <script>
+            var COMMAND = "query";
+            var DBNAME  = "@dbname";
+            var QUERIES = [@Html(dataSets.map("'"+_.query+"'").mkString(", "))];
+    </script>
+
     @if(dataSets.size > 1) {
         <h2>Comparison Matrix</h2>
 
@@ -133,7 +139,7 @@
                             .attr("class", "legend"+i)
                             .attr("dx", "0.35em")
                             .text(data.queries[i]);
-                    l.on("mouseover", mouseOverHandler(i,i));
+                    l.on("mouseover", mouseOverHandlerX(i));
                     l.on("mouseout",  mouseOutHandler(i,i));
                     l = svg.append("text")
                             .attr("transform", "translate("+margin.left+","+(margin.top+i*boxSize+boxSize/2)+")")
@@ -141,7 +147,7 @@
                             .attr("class", "legend"+i)
                             .attr("dy", "0.35em")
                             .text(data.queries[i]);
-                    l.on("mouseover", mouseOverHandler(i,i));
+                    l.on("mouseover", mouseOverHandlerY(i));
                     l.on("mouseout",  mouseOutHandler(i,i));
                 }
 
@@ -169,8 +175,7 @@
 
                     const maxSize = data.totalFocused;
 
-                    const sz = d3.scalePow()
-                            .exponent(0.5)
+                    const sz = d3.scaleLinear()
                             .domain([0, maxSize])
                             .range([0, boxSize - 10]);
 
@@ -190,7 +195,7 @@
                             .attr("height", boxSize - 10);
 
                     cells.append("rect")
-                            .attr("height", function(d) {return sz(d.size); })
+                            .attr("height", function(d) {return boxSize - 10; })
                             .attr("width", function(d) {return sz(d.size); })
                             .attr("class", function(d) {
                                 return "matched objectsRectX"+d.i+" objectsRectY"+d.j;
@@ -238,17 +243,19 @@
                     });
 
                 }
-                function mouseOverHandler(i,j) {
+                function mouseOverHandlerX(i) {
                     return function() {
-//                        if (i == j) {
-//                            $(".log").html("all objects that are: "+data.queries[i]);
-//                        } else {
-//                            $(".log").html("all objects that are both: " + data.queries[i] + " and " + data.queries[j]);
-//                        }
                         $(".matched").css("fill", "C0C0C0");
                         $(".matched").css("fill", "C0C0C0");
                         $(".objectsRectX"+i).css("fill", "#5AA7E6");
-                        $(".objectsRectY"+j).css("fill", "#5AA7E6");
+                    }
+                }
+
+                function mouseOverHandlerY(i) {
+                    return function() {
+                        $(".matched").css("fill", "C0C0C0");
+                        $(".matched").css("fill", "C0C0C0");
+                        $(".objectsRectY"+i).css("fill", "#5AA7E6");
                     }
                 }
 
@@ -274,15 +281,15 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @for((dataItem, idx) <- dataSet.data.take(1000).zipWithIndex) {
+                    @for((dataItem, idx) <- dataSet.data.take(100000).zipWithIndex) {
                         <tr>
                             <td>@idx</td>
-                            <td>@dataItem.oid</td>
-                            <td>@dataItem.klass.getOrElse(Html("<span class='empty'>N/A</span>"))</td>
-                            <td>@dataItem.allocationSite.getOrElse(Html("<span class='empty'>N/A</span>"))</td>
+                            <td><span class="oid">@dataItem.oid</span></td>
+                            <td>@Html(dataItem.klass.map("<span class='klassname'>"+_+"</span>").getOrElse("<span class='empty'>N/A</span>"))</td>
+                            <td>@Html(dataItem.allocationSite.map("<span class='allocationsite'>"+_+"</span>").getOrElse("<span class='empty'>N/A</span>"))</td>
                         </tr>
                     }
-                    @if(dataSet.data.size > 1000) {
+                    @if(dataSet.data.size > 100000) {
                         <tr>
                             <td>...</td>
                             <td>...</td>

@@ -11,7 +11,7 @@ span.code {
     font-family: 'DejaVu Sans Mono', monospace;
 }
 
-span.encodeddata {
+span.eventComment {
     font-style: italic;
     font-size: smaller;
 }
@@ -29,6 +29,25 @@ span.empty {
     font-size: smaller;
     color: gray;
     font-style: italic;
+}
+
+div.call {
+    margin-left: 1em;
+    margin-top:    0.5em;
+    margin-bottom: 0.5em;
+    border-left: solid yellowgreen;
+    padding-left: 0.1em;
+}
+
+div.callsDiv {
+    margin-left: 2em;
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+    background-color: hsl(36, 10%, 95%);
+    border: thin solid grey;
+    border-radius: 1em;
 }
 
 span.evtidx {

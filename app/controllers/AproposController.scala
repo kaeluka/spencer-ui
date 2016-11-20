@@ -19,32 +19,24 @@ import play.api.inject.ApplicationLifecycle
 import scala.concurrent.Future
 
 object AproposControllerUtil {
-  def oidWithHint(dbname: String, oklass: Option[String], oid: Long): String = {
-    oklass match {
-      case Some(klass) =>
-        "<span class='oid'>"+oid+"</span> <a class='hint' href='"+routes.AproposController.apropos_class(dbname, klass, oid.toString)+"'>apropos</a>"
-      case None =>
-        "<span class='oid'>"+oid+"</span> <a class='hint' href='"+routes.AproposController.apropos_noclass(dbname, oid.toString)+"'>apropos</a>"
-    }
+  def oidWithHint(dbname: String, oid: Long): String = {
+    "<span class='oid'>"+oid+"</span>"
   }
 }
+
 @Singleton
 class AproposController @Inject()(lifecycle: ApplicationLifecycle, messagesApi : MessagesApi, mainC: MainController) extends Controller {
 
-  def apropos_noclass(dbname: String, idStr: String) =
-    apropos_aux(dbname, None, idStr)
-
-  def apropos_class(dbname: String, klass: String, idStr: String) =
-    apropos_aux(dbname, Some(klass), idStr)
-
-  def apropos_aux(dbname: String, klass: Option[String], idStr: String) = Action { implicit req =>
+  def apropos(dbname: String, idStr: String) = Action { implicit req =>
     implicit val data: SpencerData = mainC.getDB(dbname)
+
+    val apropos = Apropos(idStr.toLong).analyse
 
     Ok(views.html.apropos(
       dbname,
-      klass,
+      apropos.klass,
       idStr.toLong,
-      Apropos(idStr.toLong).analyse,
-      klass.flatMap(SourceCode(_).analyse)))
+      apropos,
+      apropos.klass.flatMap(SourceCode(_).analyse)))
   }
 }

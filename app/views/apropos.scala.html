@@ -20,44 +20,163 @@
     *@
     <h2>Apropos @dbname :: @idx</h2>
 
+    <script>
+        var COMMAND = "apropos";
+        var DBNAME  = "@dbname";
+        var QUERIES = ["Set("+@idx+")"];
+    </script>
+
     <ul>
         <li><a class="largehint" href='@routes.QueryController.query(dbname, s"Set($idx)")'>Set(@idx) - construct object query.</a></li>
     </ul>
 
-    <div class="apropos">
+    <h2>here:</h2>
+    <div class="aproposHistory"></div>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>Start</th>
-                    <th>End</th>
-                    <th>Caller</th>
-                    <th>Callee</th>
-                    <th>Msg</th>
-                </tr>
-            </thead>
-            <tbody>
-            @Html(
-                log.evts.map(e => {
-                    "\n<td><span class='evtidx'>" + e.start + "</span></td>\n"+
-                    "\n<td><span class='evtidx'>" + (if (e.start+1 == e.end) { "" } else { e.end.toString }) + "</span></td>\n"+
-                    (if(e.caller != idx) {
-                        "<td>" + AproposControllerUtil.oidWithHint(dbname, klass, e.caller) + "</td>\n"
-                    } else {
-                        "<td><span class='code'>this</span></td>"
-                    }) +
-                    (if(e.callee != idx) {
-                        "<td>" + AproposControllerUtil.oidWithHint(dbname, klass, e.callee) + "</td>\n"
-                    } else {
-                        "<td><span class='code'>this</span></td>"
-                    }) +
-                    "<td><span class='encodeddata'>" + e.msg.replace("<","&lt;").replace(">","&gt;") + "</span></td>\n"
-                })
-                        .map("<tr>"+_+"</tr>")
-                        .mkString("\n"))
-            </tbody>
-        </table>
+    <script>
+        let HISTORY = {
+            oid: @idx,
+            klass: "@log.klass",
+            threadHistories: {}
+        };
 
+        @for(thd: String <- log.evts.map(AproposEvent.getThread(_)).toSet) {
+        //@thd
+        HISTORY.threadHistories["@thd"] = [];
+        }
+
+        function insertCallIntoThreadHistory(thdHistory, call) {
+            let N = thdHistory.length;
+            call['innerHistory'] = [];
+            if (N == 0) {
+                thdHistory.push(call);
+            } else {
+                if (thdHistory[N-1].end > call.end) {
+                    insertCallIntoThreadHistory(thdHistory[N-1].innerHistory, call);
+                } else {
+                    thdHistory.push(call);
+                }
+            }
+        }
+
+        function insertUseIntoThreadHistory(thdHistory, use) {
+            let call = thdHistory.find(function (call) {
+                return call.type === "call" && call.start < use.start && call.end > use.start;
+            });
+            if (call) {
+                insertUseIntoThreadHistory(call.innerHistory, use);
+            } else {
+                let i = thdHistory.findIndex(function (itm) {
+                    return itm.start > use.start;
+                });
+                if (i) {
+                    thdHistory.splice(i, 0, use);
+                } else {
+                    thdHistory.splice(0,0,use);
+                }
+            }
+        }
+
+        @for(evt: AproposEvent <- log.evts
+             .filter(_.isInstanceOf[AproposCallEvent])
+             .asInstanceOf[Seq[AproposCallEvent]]
+             .sortBy(AproposEvent.startTime(_))) {
+            insertCallIntoThreadHistory(
+                    HISTORY.threadHistories["@AproposEvent.getThread(evt)"],
+                    @Html(AproposEvent.toJSON(evt)));
+        }
+
+        @for(evt: AproposEvent <- log.evts
+             .filter(e => e.isInstanceOf[AproposUseEvent] || e.isInstanceOf[AproposRefEvent])
+             .sortBy(AproposEvent.startTime)) {
+        insertUseIntoThreadHistory(
+                HISTORY.threadHistories["@AproposEvent.getThread(evt)"],
+                @Html(AproposEvent.toJSON(evt)));
+        }
+
+        let threads = [];
+        for (let thread in HISTORY.threadHistories) {
+            threads.push(thread);
+        }
+
+        let aproposHistory =d3.select(".aproposHistory");
+
+        let threadDivs = aproposHistory
+                .selectAll("div")
+                .data(threads)
+                .enter()
+                .append("div");
+
+        threadDivs
+                .append("h3")
+                .attr("class", "code")
+                .html(function (d,i) {
+                    return d;
+                });
+
+        let callsDiv = threadDivs
+                .append("div")
+                .attr("class", "callsDiv");
+
+        let layer = callsDiv
+                .selectAll("div")
+                .data(function (d, i) {
+                    return HISTORY.threadHistories[d];
+                }).enter()
+                .append("div")
+                .attr("class", "call");
+
+        function makeCallStructure(parents) {
+            parents
+                    .append("span")
+                    .html(function (d, i) {
+                        if (d.type === "call") {
+                            let caller = (d.caller == @idx) ? "calling " : "<span class='oid'>" + d.caller + "</span> calls ";
+                            let callee = (d.callee == @idx) ? "<span class='code'>this</span>" : "<span class='oid'>" + d.callee + "</span>";
+                            let name = "<span class='code'>."+d.name.replace(/</, "&lt;").replace(/>/, "&gt;") + "<span>";
+                            let loc = "<span class='callsite'>"+d.callsite+"</span>";
+                            let time = "<span class='evtidx'>"+d.start + "</span>";
+                            return time + ": " + caller + callee + name + "(..) at " + loc + "<br/>";
+                        } else if (d.type === "use") {
+                            let caller = (d.caller == @idx) ? "" : "<span class='oid'>" + d.caller + "</span> executes ";
+                            let kind = d.kind.replace(/</, "&lt;").replace(/>/, "&gt;")+" of ";
+                            let callee = (d.callee == @idx) ? "<span class='code'>this</span>" : "<span class='oid'>" + d.callee + "</span>";
+                            let name = "<span class='code'>."+d.name.replace(/</, "&lt;").replace(/>/, "&gt;") + "<span>";
+                            let time = "<span class='evtidx'>" + d.start + "</span>";
+                            return time+": "+caller+kind+callee+name;
+                        } else if (d.type === "ref") {
+                            let time = "<span class='evtidx'>" + d.start + "</span>";
+                            let name = "<span class='code'>." + d.name.replace(/</, "&lt;").replace(/>/, "&gt;") + "<span> ";
+                            let lifetime = " (alive until <span class='evtidx'>" + d.end + "</span>)";
+                            if (d.callee == @idx) {
+                                let caller = (d.caller == @idx) ? "from <span class='code'>this</span> " : "from <span class='oid'>" + d.caller + "</span> ";
+                                let callee = "to <span class='code'>this</span> ";
+                                return time + ":  new " + d.kind + " ref " + caller + name + callee + lifetime;
+                            } else {
+                                let caller = (d.caller == @idx) ? "from <span class='code'>this</span> " : "from <span class='oid'>" + d.caller + "</span> ";
+                                let callee = "to <span class='oid'>" + d.callee + "</span>";
+                                return time + ":  new " + d.kind + " ref " + caller + name + callee + lifetime;
+                            }
+                        } else {
+                            return "some "+d.type+'<br/>';
+                        }
+                    });
+
+            let children = parents.selectAll("div")
+                    .data(function (d) {
+                        return d.innerHistory;
+                    }).enter().append("div").attr("class", "call");
+            if (children.size() > 0) {
+                makeCallStructure(children);
+            }
+        }
+
+        makeCallStructure(layer);
+
+    </script>
+
+
+    <div class="bytecode">
         @Html(source match {
             case Some(src) =>
                 "<h2>Source for " + klass.getOrElse("BUG: unknown klass name") + "</h2>" +

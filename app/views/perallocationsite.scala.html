@@ -21,6 +21,10 @@
     <div id="hist" style="width=2000px; height: 250px;"></div>
 
     <script>
+            var COMMAND = "perallocationsite";
+            var DBNAME  = "@dbname";
+            var QUERIES = [@Html(dataSets.map("'"+_.query+"'").mkString(", "))];
+
             HIST = document.getElementById('hist');
             var data = [];
             var colors = randomColor({seed: 123, count: @dataSets.size});
@@ -67,8 +71,8 @@
             @Html(
                 dataSet.data.filter(_.total >= 10).map {
                     case PerAllocationSiteDataItem(Some(allocationsite), succ, total) =>
-                        val (s, f) = PerAllocationSiteControllerUtil.successCountAndFailCountTexts(dbname, query, allocationsite, succ, total - succ)
-                        s"<td class='klassname'>$allocationsite</td>" +
+                        val (s, f) = PerAllocationSiteControllerUtil.successCountAndFailCountTexts(dbname, dataSets.map(_.query), allocationsite, succ, total - succ)
+                        s"<td><span class='allocationsite'>$allocationsite</span></td>" +
                                 s"<td>${succ.toFloat * 100 / total}</td>\n<td>$s</td><td>$f</td>\n"
                     case PerAllocationSiteDataItem(None, succ, total) =>
                         s"<td><span class='empty'>N/A</span></td>" +

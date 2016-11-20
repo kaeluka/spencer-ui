@@ -23,28 +23,92 @@
         <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
         <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
         <link rel="stylesheet" href="@routes.Assets.versioned("stylesheets/blue/style.css")" type="text/css" media="print, projection, screen" />
-        <script type="text/javascript">
-                $(document).ready(function()
-                        {
-                            $(".tablesorter").tablesorter();
-                        }
-                );
-                $( function() {
-                    $( "#selectable" ).selectable({
-                        stop: function() {
-                            var result = $( "#select-result" ); //.empty();
-                            $( ".ui-selected", this ).each(function() {
-                                var index = $( "#selectable li" ).index( this );
-                                result.append( " #" + ( index + 1 ) );
-                            });
-                        }
-                    });
-                } );
-        </script>
     </head>
     <body>
         @* And here's where we render the `Html` object containing
          * the page content. *@
         @content
+
+        <script type="text/javascript">
+                //If the content sets the global variable QUERIES to contain a list of
+                //queries used in this document, we can use this for the hints
+                var QUERIES;
+                var DBNAME;
+                var COMMAND;
+
+                const base = "@routes.QueryController.query("DBNAME", "THEQUERY")"
+                        .replace(/^\/query/, "/"+COMMAND)
+                        .replace(/DBNAME/, DBNAME);
+
+                $(".tablesorter").tablesorter();
+                $("span.klassname").each(function (i, s) {
+                    let klass = s.innerHTML;
+                    let instanceOfQuery = base.replace(/THEQUERY/g, "InstanceOfClass("+klass+")");
+                    s.innerHTML = klass+" <a class='hint' href='"+instanceOfQuery+"'>all instances</a>";
+                });
+
+                $("span.allocationsite").each(function (i, s) {
+                    let allocationSite = s.innerHTML;
+                    let query = base.replace(/THEQUERY/g, "AllocatedAt("+allocationSite+")");
+                    s.innerHTML = allocationSite+" <a href='"+query+"'>all allocated here</a>";
+                    if (QUERIES) {
+                        var newQ = "AllocatedAt("+allocationSite+")/"+QUERIES.join("/");
+                        newQ = base.replace(/THEQUERY/g, newQ);
+                        s.innerHTML += ", <a class='hint' href='"+newQ+"'>+ allocation site</a>"
+                    }
+                });
+
+                $("span.evtidx").mouseenter(
+                        function() {
+                            $("span.evtidx").css("color", function(idx) {
+                                return function () {
+                                    let otheridx = +this.innerHTML;
+                                    if (otheridx < idx) {
+                                        return "red";
+                                    } else if (otheridx > idx) {
+                                        return "green";
+                                    } else {
+                                        return "darkkhaki";
+                                    }
+                                };
+                            }(+this.innerHTML));
+//                        $("span.evtidx").each(function (i,other) {
+//                            let otheridx = +other.innerHTML;
+//                            let idx = +s.innerHTML;
+//                            if (otheridx < idx) {
+//                                other.css("background-color", "red");
+//                            } else if (otheridx > idx) {
+//                                other.css("background-color", "green");
+//                            }
+//                        })
+
+                        });
+
+                $("span.oid").each(function (i, s) {
+                    let oid = s.innerHTML;
+                    let query = base.replace(/THEQUERY/g, ""+oid).replace(new RegExp("^\/"+COMMAND), "/apropos");
+                    s.innerHTML = oid+" <a class='hint' href='"+query+"'>apropos</a>"
+                });
+
+                $("span.eventComment").each(function (i, s) {
+                    let annotateEvent = function(txt) {
+                        if (txt.startsWith("use readmodify")) {
+                            return txt.replace(/.*(writes|reads)\s(\w+)/g, '$1 primitive field <span class="code">$2</span>')
+                        }
+                        return txt+" (annotated)";
+                    };
+                    s.innerHTML = annotateEvent(s.innerHTML);
+                });
+
+                $( "#selectable" ).selectable({
+                    stop: function() {
+                        var result = $( "#select-result" ); //.empty();
+                        $( ".ui-selected", this ).each(function() {
+                            var index = $( "#selectable li" ).index( this );
+                            result.append( " #" + ( index + 1 ) );
+                        });
+                    }
+                });
+        </script>
     </body>
 </html>

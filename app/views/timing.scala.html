@@ -49,6 +49,11 @@
     </div>
 
     <script>
+            var COMMAND = "timing";
+            var DBNAME  = "@dbname";
+            //FIXME:
+            @*var QUERIES = [@Html(data.map("'"+_.query+"'").mkString(", "))];*@
+
             var allocTimeData = [{
                 x: [@Html(data.map({case (_, (from, _)) => from }).mkString(", "))],
                 type: 'histogram',

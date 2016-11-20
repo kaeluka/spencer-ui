@@ -11,14 +11,18 @@ import play.api.inject.ApplicationLifecycle
 import play.api.mvc._
 
 object PerAllocationSiteControllerUtil {
-  def successCountAndFailCountTexts(dbname: String, query: String, allocationSite: String, succ: Int, fail: Int) : (String, String) = {
+  def successCountAndFailCountTexts(dbname: String, queries: Seq[String], allocationSite: String, succ: Int, fail: Int) : (String, String) = {
     (if (succ > 0) {
-      s"$succ <a href='${routes.QueryController.query(dbname, s"And($query AllocatedAt($allocationSite))")}' class='hint'>show</a>"
+      val newQueries = queries
+        .map("And("+_+" AllocatedAt("+allocationSite+"))").mkString("/")
+      s"$succ <a href='${routes.QueryController.query(dbname, newQueries)}' class='hint'>show</a>"
     } else {
       succ.toString
     },
       if (fail > 0) {
-        s"$fail <a href='${routes.QueryController.query(dbname, s"And(Not($query) AllocatedAt($allocationSite))")}' class='hint'>show</a>"
+        val newQueries = queries
+          .map("And(Not("+_+") AllocatedAt("+allocationSite+"))").mkString("/")
+        s"$fail <a href='${routes.QueryController.query(dbname, newQueries)}' class='hint'>show</a>"
       } else {
         fail.toString
       })
