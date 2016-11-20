@@ -18,7 +18,7 @@
     * template and passing a `String` message.
     * @play20.welcome(message, style = "Scala")
     *@
-    <h2>Apropos @dbname :: @idx</h2>
+    <h2>Apropos @dbname: <span class="code">this</span> = @klass.getOrElse("&lt;unknown class&gt;") @Html("@") @idx</h2>
 
     <script>
         var COMMAND = "apropos";
@@ -30,7 +30,7 @@
         <li><a class="largehint" href='@routes.QueryController.query(dbname, s"Set($idx)")'>Set(@idx) - construct object query.</a></li>
     </ul>
 
-    <h2>here:</h2>
+    <h2>History:</h2>
     <div class="aproposHistory"></div>
 
     <script>
@@ -66,19 +66,10 @@
                         thdHistory.splice(idx+1,0,call)
                     }
                 }
-//                if (thdHistory[N-1].end > call.end) {
-//                    insertCallIntoThreadHistory(thdHistory[N-1].innerHistory, call);
-//                } else {
-//                    call['innerHistory'] = [];
-//                    thdHistory.push(call);
-//                }
             }
         }
 
         function insertUseIntoThreadHistory(thdHistory, use) {
-//            if (use.start == 477358) {
-//                debugger;
-//            }
             let call = thdHistory.find(function (call) {
                 return call.type === "call" && call.start < use.start && call.end > use.start;
             });
@@ -89,9 +80,7 @@
                     return itm.start > use.start;
                 });
                 if (firstLaterIdx >= 0) {
-//                    console.log({splicing_into: thdHistory, at: i});
                     thdHistory.splice(firstLaterIdx, 0, use);
-//                    console.log({spliced: thdHistory});
                 } else {
                     if (thdHistory.length == 0) {
                         thdHistory.splice(0,0,use);
@@ -154,40 +143,39 @@
                 .attr("class", "call");
 
         function makeCallStructure(parents) {
-            console.log({parents});
             parents
                     .append("span")
                     .html(function (d, i) {
-                        console.log({d});
+                        let time = "<span class='evtidx'>"+d.start + "</span>";
                         if (d.type === "call") {
                             let caller = (d.caller == @idx) ? "calling " : "<span class='oid'>" + d.caller + "</span> calls ";
                             let callee = (d.callee == @idx) ? "<span class='code'>this</span>" : "<span class='oid'>" + d.callee + "</span>";
                             let name = "<span class='code'>."+d.name.replace(/</, "&lt;").replace(/>/, "&gt;") + "<span>";
                             let loc = "<span class='callsite'>"+d.callsite+"</span>";
-                            let time = "<span class='evtidx'>"+d.start + "</span>";
                             return time + ": " + caller + callee + name + "(..) at " + loc + "<br/>";
                         } else if (d.type === "use") {
-                            if (d.start == 2314523) {
-                                console.log({here_it_is: d});
+                            if (d.caller == @idx) {
+                                if (d.kind === "read") {
+                                    return time+": reading primitive field <span class='code'>"+d.name+"</span> of <span class='oid'>"+d.callee+"</span>";
+                                } else if (d.kind === "modify") {
+                                    return time+": writing primitive field <span class='code'>"+d.name+"</span> of <span class='oid'>"+d.callee+"</span>";
+                                } else if (d.kind === "varload") {
+                                    return time+": loading <span class='oid'>"+d.callee+"</span>, using reference type variable <span class='code'>"+d.name+"</span>";
+                                } else if (d.kind === "fieldload") {
+                                    return time+": loading <span class='oid'>"+d.callee+"</span>, using reference type field <span class='code'>"+d.name+"</span>";
+                                } else {
+                                    throw "error: unknown kind: "+d.kind;
+                                }
+                            } else {
+                                return time+": <span class='oid'>" + d.caller + "</span> loads <span class='code'>this</span> using a "+d.kind+" of <span class='code'>"+d.name+"</span>";
                             }
-                            let caller = (d.caller == @idx) ? "" : "<span class='oid'>" + d.caller + "</span> executes ";
-                            let kind = d.kind.replace(/</, "&lt;").replace(/>/, "&gt;")+" of ";
-                            let callee = (d.callee == @idx) ? "<span class='code'>this</span>" : "<span class='oid'>" + d.callee + "</span>";
-                            let name = "<span class='code'>."+d.name.replace(/</, "&lt;").replace(/>/, "&gt;") + "<span>";
-                            let time = "<span class='evtidx'>" + d.start + "</span>";
-                            return time+": "+caller+kind+callee+name;
                         } else if (d.type === "ref") {
-                            let time = "<span class='evtidx'>" + d.start + "</span>";
                             let name = "<span class='code'>." + d.name.replace(/</, "&lt;").replace(/>/, "&gt;") + "<span> ";
                             let lifetime = " (alive until <span class='evtidx'>" + d.end + "</span>)";
                             if (d.callee == @idx) {
-                                let caller = (d.caller == @idx) ? "from <span class='code'>this</span> " : "from <span class='oid'>" + d.caller + "</span> ";
-                                let callee = "to <span class='code'>this</span> ";
-                                return time + ":  new " + d.kind + " ref " + caller + name + callee + lifetime;
+                                return time+": <span class='oid'>"+d.caller+"</span> points "+((d.kind === "field") ? "field " : "")+d.name+" at <span class='code'>this</span>";
                             } else {
-                                let caller = (d.caller == @idx) ? "from <span class='code'>this</span> " : "from <span class='oid'>" + d.caller + "</span> ";
-                                let callee = "to <span class='oid'>" + d.callee + "</span>";
-                                return time + ":  new " + d.kind + " ref " + caller + name + callee + lifetime;
+                                return time+": pointing "+((d.kind==="field") ? "field " : "")+"<span class='code'>"+d.name+"</span> at <span class='oid'>"+d.callee+"</span>";
                             }
                         } else {
                             return "some "+d.type+'<br/>';
