@@ -47,32 +47,57 @@
 
         function insertCallIntoThreadHistory(thdHistory, call) {
             let N = thdHistory.length;
-            call['innerHistory'] = [];
             if (N == 0) {
+                call['innerHistory'] = [];
                 thdHistory.push(call);
             } else {
-                if (thdHistory[N-1].end > call.end) {
-                    insertCallIntoThreadHistory(thdHistory[N-1].innerHistory, call);
-                } else {
-                    thdHistory.push(call);
+                let idx=N-1;
+                while (thdHistory[idx].start > call.start && idx >= 0) {
+                    idx--;
                 }
+                if (idx == -1) {
+                    call['innerHistory'] = [];
+                    thdHistory.splice(0,0,call);
+                } else {
+                    if (thdHistory[idx].end > call.end) {
+                        insertCallIntoThreadHistory(thdHistory[idx].innerHistory, call);
+                    } else {
+                        call['innerHistory'] = [];
+                        thdHistory.splice(idx+1,0,call)
+                    }
+                }
+//                if (thdHistory[N-1].end > call.end) {
+//                    insertCallIntoThreadHistory(thdHistory[N-1].innerHistory, call);
+//                } else {
+//                    call['innerHistory'] = [];
+//                    thdHistory.push(call);
+//                }
             }
         }
 
         function insertUseIntoThreadHistory(thdHistory, use) {
+//            if (use.start == 477358) {
+//                debugger;
+//            }
             let call = thdHistory.find(function (call) {
                 return call.type === "call" && call.start < use.start && call.end > use.start;
             });
             if (call) {
                 insertUseIntoThreadHistory(call.innerHistory, use);
             } else {
-                let i = thdHistory.findIndex(function (itm) {
+                let firstLaterIdx = thdHistory.findIndex(function (itm) {
                     return itm.start > use.start;
                 });
-                if (i) {
-                    thdHistory.splice(i, 0, use);
+                if (firstLaterIdx >= 0) {
+//                    console.log({splicing_into: thdHistory, at: i});
+                    thdHistory.splice(firstLaterIdx, 0, use);
+//                    console.log({spliced: thdHistory});
                 } else {
-                    thdHistory.splice(0,0,use);
+                    if (thdHistory.length == 0) {
+                        thdHistory.splice(0,0,use);
+                    } else {
+                        thdHistory.push(use);
+                    }
                 }
             }
         }
@@ -93,6 +118,8 @@
                 HISTORY.threadHistories["@AproposEvent.getThread(evt)"],
                 @Html(AproposEvent.toJSON(evt)));
         }
+
+        console.log({HISTORY});
 
         let threads = [];
         for (let thread in HISTORY.threadHistories) {
@@ -127,9 +154,11 @@
                 .attr("class", "call");
 
         function makeCallStructure(parents) {
+            console.log({parents});
             parents
                     .append("span")
                     .html(function (d, i) {
+                        console.log({d});
                         if (d.type === "call") {
                             let caller = (d.caller == @idx) ? "calling " : "<span class='oid'>" + d.caller + "</span> calls ";
                             let callee = (d.callee == @idx) ? "<span class='code'>this</span>" : "<span class='oid'>" + d.callee + "</span>";
@@ -138,6 +167,9 @@
                             let time = "<span class='evtidx'>"+d.start + "</span>";
                             return time + ": " + caller + callee + name + "(..) at " + loc + "<br/>";
                         } else if (d.type === "use") {
+                            if (d.start == 2314523) {
+                                console.log({here_it_is: d});
+                            }
                             let caller = (d.caller == @idx) ? "" : "<span class='oid'>" + d.caller + "</span> executes ";
                             let kind = d.kind.replace(/</, "&lt;").replace(/>/, "&gt;")+" of ";
                             let callee = (d.callee == @idx) ? "<span class='code'>this</span>" : "<span class='oid'>" + d.callee + "</span>";
@@ -164,7 +196,11 @@
 
             let children = parents.selectAll("div")
                     .data(function (d) {
-                        return d.innerHistory;
+                        if (d.innerHistory) {
+                            return d.innerHistory;
+                        } else {
+                            return [];
+                        }
                     }).enter().append("div").attr("class", "call");
             if (children.size() > 0) {
                 makeCallStructure(children);
