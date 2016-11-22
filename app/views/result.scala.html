@@ -281,7 +281,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @for((dataItem, idx) <- dataSet.data.take(100000).zipWithIndex) {
+                    @for((dataItem, idx) <- dataSet.data.take(10000/dataSets.size).zipWithIndex) {
                         <tr>
                             <td>@idx</td>
                             <td><span class="oid">@dataItem.oid</span></td>
@@ -289,7 +289,7 @@
                             <td>@Html(dataItem.allocationSite.map("<span class='allocationsite'>"+_+"</span>").getOrElse("<span class='empty'>N/A</span>"))</td>
                         </tr>
                     }
-                    @if(dataSet.data.size > 100000) {
+                    @if(dataSet.data.size > 10000/dataSets.size) {
                         <tr>
                             <td>...</td>
                             <td>...</td>
