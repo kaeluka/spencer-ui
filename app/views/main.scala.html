@@ -36,7 +36,7 @@
                 var DBNAME;
                 var COMMAND;
 
-                const base = "@routes.QueryController.query("DBNAME", "THEQUERY")"
+                const base = "@routes.QueryController.perobj("DBNAME", "THEQUERY")"
                         .replace(/^\/query/, "/"+COMMAND)
                         .replace(/DBNAME/, DBNAME);
 
@@ -98,6 +98,11 @@
                         return txt+" (annotated)";
                     };
                     s.innerHTML = annotateEvent(s.innerHTML);
+                });
+
+                $(".query").each(function (i, s) {
+                    let q = s.innerHTML;
+                    s.innerHTML = "<a target='_blank' href='"+base.replace(/THEQUERY/g, q).replace(/COMMAND/g, "/perobj")+"'>"+q+"</a>"
                 });
 
                 $( "#selectable" ).selectable({

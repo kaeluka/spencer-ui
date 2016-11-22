@@ -1,3 +1,4 @@
+@import com.github.kaeluka.spencer.analysis.QueryParser
 @()(implicit messages: Messages)
 @*
  * Call the `main` template with two arguments. The first
@@ -14,15 +15,105 @@
 
     <img height="200px" alt="Spencer" src="@routes.Assets.versioned("images/spencer.jpg")"/>
 
-    <h1>Examples</h1>
+    <div class="text">
+        <h1>Spencer, Tracing as a Service</h1>
+
+        Spencer is a tool to analyse large program traces using custom queries.
+        Queries in spencer are composable: If you have one analysis, you are
+        able to refine it using others.
+
+        <h2>Queries</h2>
+        Queries in Spencer are expressions that return a set of object IDs. They
+        implement a test: does an object's lifetime fulfill a certain definition or
+        not?
+
+        Spencer distinguishes between primitive queries and composed queries.
+        Primitive queries are the basic building blocks that are implemented
+        "natively" in the backend of the service.
+
+        The primitive queries are:
+
+        <style>
+            table.queries thead tr {
+                background-color: #ebdaa9;
+            }
+
+            table.queries {
+                margin-top: 2em;
+                margin-bottom: 2em;
+                margin-left: auto;
+                margin-right: auto;
+            }
+        </style>
+
+        <script>
+            var DBNAME='test';
+        </script>
+
+        <table class="queries">
+            <thead>
+                <tr>
+                    <td>Query</td>
+                    <td>Meaning</td>
+                </tr>
+            </thead>
+            <tbody>
+            @for(q <- QueryParser.primitiveQueries()) {
+                <tr>
+                    <td><div class="query">@q.toString</div></td>
+                    <td><span class="queryExplanation">All objects that @(q.explanation).</span></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+
+        Spencer's power lies in the fact that these queries all return the same
+        kind of structure: sets of objects! This restriction makes it possible
+        to compose queries into larger ones, like so:
+
+        <table class="queries">
+            <thead>
+                <tr>
+                    <td>Query</td>
+                    <td>Meaning</td>
+                </tr>
+            </thead>
+            <tbody>
+            @for(q <- List(
+                "And(ImmutableObj() AllocatedAt(String.java:1933))",
+                "Or(UniqueObj() ImmutableObj())",
+                "ReachableFrom(AllocatedAt(String.java:1933))",
+                "CanReach(AllocatedAt(String.java:1933))"
+            )
+                    .map(QueryParser.parseObjQuery)
+                    .map(x => { assert(x.isRight, x+" must be right!"); x.right.get })) {
+                <tr>
+                    <td><div class="query">@q.toString</div></td>
+                    <td><span class="queryExplanation">All objects that @(q.explanation).</span></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+
+        <h2>The design of Queries</h2>
+
+        <h2>What's in the data?</h2>
+
+        <h3>Sequence</h3>
+
+        <h3>Graph</h3>
 
 
-    <ul>
-        <li><a href="@routes.QueryController.query("test", "MutableObj()" )">All mutable objects</a></li>
-        <li><a href="@routes.QueryController.query("test", "ImmutableObj()")">All immutable objects</a></li>
-        <li><a href="@routes.QueryController.query("test", "Deeply(ImmutableObj())")">All deeply immutable objects</a></li>
-        <li><a href="@routes.QueryController.query("test", "CanReach(Set(6641 7458))")">All objects that can reach (transitively, via fields) either object 6641 or 7458</a></li>
 
-    </ul>
+        <h1>Examples</h1>
+
+
+        <ul>
+            <li><a href='@routes.QueryController.perobj("test", "MutableObj()" )'>All mutable objects</a></li>
+            <li><a href='@routes.QueryController.perobj("test", "ImmutableObj()")'>All immutable objects</a></li>
+            <li><a href='@routes.QueryController.perobj("test", "Deeply(ImmutableObj())")'>All deeply immutable objects</a></li>
+            <li><a href='@routes.QueryController.perobj("test", "CanReach(Set(6641 7458))")'>All objects that can reach (transitively, via fields) either object 6641 or 7458</a></li>
+        </ul>
+    </div>
 
 }

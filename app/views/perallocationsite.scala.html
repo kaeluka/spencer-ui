@@ -5,7 +5,7 @@
 @main(s"Per Allocation Site: $query") {
 
     <ul class="largehint">
-        <li><a class="largehint" href='@routes.QueryController.query(dbname, query)'>Per-object analysis of current objects.</a></li>
+        <li><a class="largehint" href='@routes.QueryController.perobj(dbname, query)'>Per-object analysis of current objects.</a></li>
         <li><a class="largehint" href='@routes.PerClassController.query(dbname, query)'>Per-class analysis of current objects.</a></li>
         <li><a class="largehint" href='@routes.TimingController.query(dbname, query)'>Lifetime analysis of current objects.</a></li>
         <li><a class="largehint" href='@routes.PerAllocationSiteController.query(dbname, s"Not($query)")'>Not(..) - Negate current query.</a></li>

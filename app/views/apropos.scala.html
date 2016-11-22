@@ -18,7 +18,7 @@
     * template and passing a `String` message.
     * @play20.welcome(message, style = "Scala")
     *@
-    <h2>Apropos @dbname: <span class="code">this</span> = @klass.getOrElse("&lt;unknown class&gt;") @Html("@") @idx</h2>
+    <h2>Apropos @dbname: <span class="code">this</span> = @klass.getOrElse("<unknown class>") @Html("@") @idx</h2>
 
     <script>
         var COMMAND = "apropos";
@@ -27,7 +27,7 @@
     </script>
 
     <ul>
-        <li><a class="largehint" href='@routes.QueryController.query(dbname, s"Set($idx)")'>Set(@idx) - construct object query.</a></li>
+        <li><a class="largehint" href='@routes.QueryController.perobj(dbname, s"Set($idx)")'>Set(@idx) - construct object query.</a></li>
     </ul>
 
     <h2>History:</h2>
@@ -160,14 +160,24 @@
                                 } else if (d.kind === "modify") {
                                     return time+": writing primitive field <span class='code'>"+d.name+"</span> of <span class='oid'>"+d.callee+"</span>";
                                 } else if (d.kind === "varload") {
-                                    return time+": loading <span class='oid'>"+d.callee+"</span>, using reference type variable <span class='code'>"+d.name+"</span>";
+                                    return time+": loading <span class='oid'>"+d.callee+"</span>, using variable <span class='code'>"+d.name+"</span>";
                                 } else if (d.kind === "fieldload") {
-                                    return time+": loading <span class='oid'>"+d.callee+"</span>, using reference type field <span class='code'>"+d.name+"</span>";
+                                    return time+": loading <span class='oid'>"+d.callee+"</span>, using field <span class='code'>"+d.name+"</span>";
                                 } else {
                                     throw "error: unknown kind: "+d.kind;
                                 }
                             } else {
-                                return time+": <span class='oid'>" + d.caller + "</span> loads <span class='code'>this</span> using a "+d.kind+" of <span class='code'>"+d.name+"</span>";
+                                if (d.kind === "read") {
+                                    return time+": <span class='oid'>"+d.caller+"</span> reading primitive field <span class='code'>this."+d.name+"</span>";
+                                } else if (d.kind === "modify") {
+                                    return time+": <span class='oid'>"+d.caller+"</span> writing to primitive field <span class='code'>this."+d.name+"</span>";
+                                } else if (d.kind === "varload") {
+                                    return time+": <span class='oid'>"+d.caller+"</span> loading <span class='code>this</span> using its var <span class='code'>"+d.name+"</span>";
+                                } else if (d.kind === "fieldload") {
+                                    return time+": <span class='oid'>"+d.caller+"</span> loading <span class='code'>this</span> using its field <span class='code'>"+d.name+"</span>";
+                                } else {
+                                    throw "error: unknown kind: "+d.kind;
+                                }
                             }
                         } else if (d.type === "ref") {
                             let name = "<span class='code'>." + d.name.replace(/</, "&lt;").replace(/>/, "&gt;") + "<span> ";

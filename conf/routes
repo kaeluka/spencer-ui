@@ -6,9 +6,9 @@
 GET     /                                     controllers.MainController.index
 GET     /playground                           controllers.MainController.playground
 
-GET     /query/                               controllers.QueryController.query(n = "test", qs = "Obj()")
-GET     /query/:dbname                        controllers.QueryController.query(dbname, qs = "Obj()")
-GET     /query/:dbname/*q                     controllers.QueryController.query(dbname, q)
+GET     /perobj/                              controllers.QueryController.perobj(n = "test", qs = "Obj()")
+GET     /perobj/:dbname                       controllers.QueryController.perobj(dbname, qs = "Obj()")
+GET     /perobj/:dbname/*q                    controllers.QueryController.perobj(dbname, q)
 
 GET     /perclass/:dbname/*q                  controllers.PerClassController.query(dbname, q)
 GET     /timing/:dbname/:q                    controllers.TimingController.query(dbname, q)

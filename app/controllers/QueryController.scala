@@ -28,8 +28,8 @@ object QueryControllerUtil {
     val inner = optKlass match {
       case Some(klass) =>
         klass +
-          s" <a class='hint' href='" + routes.QueryController.query(dbname, "InstanceOfClass(" + klass + ")") +"'>all instances</a>" +
-          " <a class='hint' href='" + routes.QueryController.query(dbname, "And("+query+ " InstanceOfClass(" + klass + "))") +"'>.. + all instances</a>" +
+          s" <a class='hint' href='" + routes.QueryController.perobj(dbname, "InstanceOfClass(" + klass + ")") +"'>all instances</a>" +
+          " <a class='hint' href='" + routes.QueryController.perobj(dbname, "And("+query+ " InstanceOfClass(" + klass + "))") +"'>.. + all instances</a>" +
           (if (! klass.startsWith("[")) {
             " <a class='hint' href='" + routes.SourceCodeController.query(dbname, klass) +"'>view source</a>"
           } else {
@@ -54,10 +54,10 @@ class QueryController @Inject()(lifecycle: ApplicationLifecycle, messagesApi : M
   def queryDataPost(dbname: String) = Action { implicit request =>
     val selected = request.rawQueryString.split("&").map(_.replace("=on", "").replace("chk-", "").toLong).mkString(" ")
 
-    Redirect(routes.QueryController.query("test", "Set("+selected+")"))
+    Redirect(routes.QueryController.perobj("test", "Set("+selected+")"))
   }
 
-  def query(dbname: String, qs: String) = Action { implicit req =>
+  def perobj(dbname: String, qs: String) = Action { implicit req =>
     implicit val data: SpencerData = mainC.getDB(dbname)
     //
     val queries = qs.split("/").map(QueryParser.parseObjQuery(_))
