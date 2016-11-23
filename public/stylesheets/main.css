@@ -59,6 +59,10 @@ span.empty {
     font-style: italic;
 }
 
+span.todo {
+    background-color: #dca1a4;
+}
+
 div.call {
     margin-left: 1em;
     margin-top:    0.5em;
@@ -85,8 +89,41 @@ span.evtidx {
     color: gray;
 }
 
+div.text p {
+    margin: 0 20%;
+    text-indent: 1em;
+}
+
 .code {
     font-family: 'DejaVu Sans Mono', monospace;
+}
+
+.useKind.fieldstore {
+    color: #912e1a;
+    font-weight: bold;
+}
+
+.useKind.modify {
+    color: #a8351e;
+    font-weight: bold;
+}
+
+.useKind.varstore {
+    color: #c2391d;
+}
+
+.useKind.fieldload {
+    color: #197292;
+    font-weight: bold;
+}
+
+.useKind.read {
+    color: #1e7fa6;
+    font-weight: bold;
+}
+
+.useKind.varload {
+    color: #1c94c4;
 }
 
 #feedback { font-size: 1.4em; }

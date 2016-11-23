@@ -87,7 +87,7 @@
                 $("span.oid").each(function (i, s) {
                     let oid = s.innerHTML;
                     let query = base.replace(/THEQUERY/g, ""+oid).replace(new RegExp("^\/"+COMMAND), "/apropos");
-                    s.innerHTML = oid+" <a class='hint' href='"+query+"'>apropos</a>"
+                    s.innerHTML = oid+" <a target='_blank' class='hint' href='"+query+"'>apropos</a>"
                 });
 
                 $("span.eventComment").each(function (i, s) {
@@ -103,6 +103,11 @@
                 $(".query").each(function (i, s) {
                     let q = s.innerHTML;
                     s.innerHTML = "<a target='_blank' href='"+base.replace(/THEQUERY/g, q).replace(/COMMAND/g, "/perobj")+"'>"+q+"</a>"
+                });
+
+                $(".useKind").each(function (i, s) {
+                    let kind = s.innerHTML;
+                    s.className += " "+kind;
                 });
 
                 $( "#selectable" ).selectable({
