@@ -1,5 +1,6 @@
 @import com.github.kaeluka.spencer.analysis.QueryParser
-@()(implicit messages: Messages)
+@import com.github.kaeluka.spencer.tracefiles.SpencerDB
+@()(implicit db: SpencerDB)
 @*
  * Call the `main` template with two arguments. The first
  * argument is a `String` with the title of the page, the second
@@ -34,11 +35,11 @@
         The primitive queries are:
 
         <style>
-            table.queries thead tr {
+            table thead tr {
                 background-color: #ebdaa9;
             }
 
-            table.queries {
+            table {
                 margin-top: 2em;
                 margin-bottom: 2em;
                 margin-left: auto;
@@ -61,7 +62,7 @@
             @for(q <- QueryParser.primitiveQueries()) {
                 <tr>
                     <td><div class="query">@q.toString</div></td>
-                    <td><span class="queryExplanation">All objects that @(q.explanation).</span></td>
+                    <td><span class="queryExplanation">All objects that @(q.explanation) .</span></td>
                 </tr>
             }
             </tbody>
@@ -98,6 +99,84 @@
         <h2>The design of Queries</h2>
 
         <h2>What's in the data?</h2>
+
+        Spencer contains data sets. One data set is a program trace (in preprocessed form) that
+        stems from running and instrumenting a program.
+
+        The data in the program are distributed over several tables:
+
+        <h3>The <span class="code">objects</span> table</h3>
+
+        <table>
+            <thead>
+                <tr>
+                    <td>object id</td>
+                    <td>allocation site file</td>
+                    <td>event idx of allocation </td>
+                    <td>event idx of last usage</td>
+                </tr>
+            </thead>
+            <tbody>
+                @for(rec <- db.getTable("objects").filter(_.getLong("id") > 1500).take(15).sortBy(_.getLong("id"))) {
+                    <tr>
+                        <td><span class="oid">@rec.getLong("id")</span></td>
+                        <td>
+                            @((rec.getStringOption("allocationsitefile"), rec.getLongOption("allocationsiteline")) match {
+                                case (Some(f), Some(l)) => Html("<span class='allocationsite'>"+f+":"+l+"</span>")
+                                case _ => Html("<span class='empty'>none</span>")
+                            })
+                        </td>
+                        <td><span class="evtidx">@rec.getLong("firstusage")</span></td>
+                        <td><span class="evtidx">@rec.getLong("lastusage")</span></td>
+                    </tr>
+                }
+                <tr>
+                    <td>...</td>
+                    <td>...</td>
+                    <td>...</td>
+                    <td>...</td>
+                </tr>
+            </tbody>
+
+        </table>
+
+        <h3>The <span class="code">refs</span> table</h3>
+
+        <table>
+            <thead>
+                <tr>
+                    <td>holder of reference</td>
+                    <td>referent</td>
+                    <td>kind of reference</td>
+                    <td>name of reference</td>
+                    <td>start of reference</td>
+                    <td>end of reference (if any)</td>
+                    <td>thread that establish the reference</td>
+                </tr>
+            </thead>
+            <tbody>
+                @for(rec <- db.getTable("refs").filter(_.getLong("caller") > 1500).take(15).sortBy(_.getLong("start"))) {
+                    <tr>
+                        <td><span class="oid">@rec.getLong("caller")</span></td>
+                        <td><span class="oid">@rec.getLong("callee")</span></td>
+                        <td><span class="code">@rec.getString("kind")</span></td>
+                        <td><span class="code">@rec.getString("name")</span></td>
+                        <td><span class="evtidx">@rec.getLong("start")</span></td>
+                        <td>@Html(rec.getLongOption("end").map("<span class='evtidx'>"+_+"</span>").getOrElse("<span class='empty'>none</span>"))</td>
+                        <td><span class="code">@rec.getString("thread")</span></td>
+                    </tr>
+                }
+                <tr>
+                    <td>...</td>
+                    <td>...</td>
+                    <td>...</td>
+                    <td>...</td>
+                </tr>
+            </tbody>
+
+        </table>
+
+        <h3>The <span class="code">uses</span> table</h3>
 
         <h3>Sequence</h3>
 

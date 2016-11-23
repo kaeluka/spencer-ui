@@ -19,15 +19,14 @@ span.code {
 /*}*/
 .query {
     background-color: #f0ffc3;
-}
-div.query {
-    border-left: solid #808967;
+    border-left: solid #aab68a;
     border-right: solid #aab68a;
+    border-radius: 0.5em;
+}
+
+div.query {
     padding-left: 1.2em;
     text-indent: -1em;
-    border-radius: 0.5em;
-    /*padding: 0.1em 0.5em;*/
-    /*margin: 0.1em 0.1em;*/
 }
 
 .query a {

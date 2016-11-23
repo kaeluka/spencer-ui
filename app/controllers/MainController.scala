@@ -35,7 +35,8 @@ class MainController @Inject()(lifecycle: ApplicationLifecycle, messagesApi : Me
   }
 
   def index = Action { implicit request =>
-    Ok(views.html.index()(messagesApi.preferred(request)))
+    implicit val db = getDB("test")
+    Ok(views.html.index())
   }
 
   def playground = Action { implicit request =>
