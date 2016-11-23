@@ -57,6 +57,7 @@
         </style>
 
         <script>
+            var COMMAND='perobj';
             var DBNAME='test';
         </script>
 
@@ -406,6 +407,44 @@
             </tbody>
 
         </table>
+
+        <h3>Future Work: The <span class="code">sync</span> table</h3>
+
+        Event indices are numeric. This wrongly suggests that events are ordered
+        by index, even accross threads. This is wrong because the fact that two
+        parallel events ended up in the data base in one particular order does
+        not imply that there was an actual happens-before relation.
+
+        Spencer might, in the future, trace synchronisation points between
+        threads that establishes happens-before accross thread boundaries.
+
+
+        <table>
+            <thead>
+                <tr>
+                    <td><span class="code">thread1</span></td>
+                    <td class="empty"></td>
+                    <td><span class="code">synchronisationfile1</span></td>
+                    <td><span class="code">synchronisationline1</span></td>
+                    <td><span class="code">event-before</span></td>
+                    <td class="empty"></td>
+                    <td><span class="code">thread2</span></td>
+                    <td class="empty"></td>
+                    <td><span class="code">synchronisationfile1</span></td>
+                    <td><span class="code">synchronisationline1</span></td>
+                    <td><span class="code">event-after</span></td>
+                    <td class="empty"></td>
+                    <td><span class="code">start</span></td>
+                    <td class="empty"></td>
+                    <td><span class="code">end</span></td>
+                    <td class="empty"></td>
+                    <td><span class="code">thread</span></td>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+
     </div>
 
 }

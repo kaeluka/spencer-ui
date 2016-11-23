@@ -30,205 +30,204 @@
             var QUERIES = [@Html(dataSets.map("'"+_.query+"'").mkString(", "))];
     </script>
 
-    @if(dataSets.size > 1) {
-        <h2>Comparison Matrix</h2>
+    <h2>Comparison Matrix</h2>
 
-        <svg class="result"></svg>
-        <div class="log" width="500" height="200"></div>
+    <svg class="result"></svg>
+    <div class="log" width="500" height="200"></div>
 
-        <script>
-                var color = randomColor({count: @(dataSets.size), seed: 123});
+    <script>
+            var color = randomColor({count: @(dataSets.size), seed: 123});
 
-                function getRawData(focusMatch, focusNonmatch) {
-                    var queries = [];
-                    var sizes = [];
-                    var data = [];
-                    var undata = [];
-                    var i = 0;
-                    var f = 0;
+            function getRawData(focusMatch, focusNonmatch) {
+                var queries = [];
+                var sizes = [];
+                var data = [];
+                var undata = [];
+                var i = 0;
+                var f = 0;
 
-                    @for(dataSet <- dataSets) {
-                        queries.push("@(dataSet.query)");
-                        data.push([@(dataSet.data.map(_.oid).mkString(","))]);
-                        undata.push([@((allObjs -- dataSet.data.map(_.oid)).mkString(","))]);
-                    }
+                @for(dataSet <- dataSets) {
+                queries.push("@(dataSet.query)");
+                data.push([@(dataSet.data.map(_.oid).mkString(","))]);
+                undata.push([@((allObjs -- dataSet.data.map(_.oid)).mkString(","))]);
+                }
 
 //                    console.log("data sizes:");
 //                    for (i=0; i<data.length; ++i) {
 //                        console.log(i+": "+data[i].length+" + "+undata[i].length+" = "+(data[i].length+undata[i].length));
 //                    }
 
-                    var hiddenObjs = new Set([]);
+                var hiddenObjs = new Set([]);
 
-                    console.log("focusMatch=");
-                    console.log(focusMatch);
-                    for (i of focusMatch) {
-                        console.log(i);
-                        console.log("focus: adding "+undata[i].length+" oids to hiddenObjs");
-                        for (f in undata[i]) {
-                            hiddenObjs.add(undata[i][f]);
-                        }
+                console.log("focusMatch=");
+                console.log(focusMatch);
+                for (i of focusMatch) {
+                    console.log(i);
+                    console.log("focus: adding "+undata[i].length+" oids to hiddenObjs");
+                    for (f in undata[i]) {
+                        hiddenObjs.add(undata[i][f]);
                     }
+                }
 
-                    console.log("focusNonmatch=");
-                    console.log(focusNonmatch);
-                    for (i of focusNonmatch) {
-                        console.log(i);
-                        console.log("hide: adding "+data[i].length+" oids to hiddenObjs");
-                        for (f in data[i]) {
-                            hiddenObjs.add(data[i][f]);
-                        }
+                console.log("focusNonmatch=");
+                console.log(focusNonmatch);
+                for (i of focusNonmatch) {
+                    console.log(i);
+                    console.log("hide: adding "+data[i].length+" oids to hiddenObjs");
+                    for (f in data[i]) {
+                        hiddenObjs.add(data[i][f]);
                     }
+                }
 
 //                    console.log("focus:");
 //                    console.log(focusMatch);
 //                    console.log("hide:");
 //                    console.log(focusNonmatch);
-                    console.log("hiddenObjs:");
-                    console.log(hiddenObjs);
+                console.log("hiddenObjs:");
+                console.log(hiddenObjs);
 
-                    for (i in data) {
-                        data[i] = data[i].filter(function (oid) {
-                            return !hiddenObjs.has(oid);
+                for (i in data) {
+                    data[i] = data[i].filter(function (oid) {
+                        return !hiddenObjs.has(oid);
+                    });
+                }
+
+                for (i in data) {
+                    var size_row = [];
+                    for (j in data) {
+                        var jSet = new Set(data[j]);
+                        size_row.push(data[i].filter(function (oid) {
+                            return jSet.has(oid);
+                        }).length);
+                    }
+                    sizes.push(size_row);
+                }
+
+                return {
+                    sizes: sizes,
+                    queries: queries,
+                    data: data,
+                    totalFocused: @allObjs.size - hiddenObjs.size
+                };
+            }
+
+            const boxSize = 100;
+            var i;
+            var includeMatchList = new Set([]);
+            var hideMatchList = new Set([]);
+
+            var data;
+
+            const N = @dataSets.size;
+            const margin = {top: 0, bottom: 100, left: 200, right: 0};
+            const svg = d3.select("svg")
+                    .attr("width", (N+1)*boxSize+margin.left+margin.right)
+                    .attr("height", (N+1)*boxSize+margin.bottom+margin.top);
+            const grid = svg.append("g")
+                    .attr("transform", "translate("+margin.left+","+margin.top+")")
+                    .attr("width", +svg.attr("width")-margin.left-margin.right)
+                    .attr("height", +svg.attr("height")-margin.top-margin.bottom);
+
+            draw();
+
+            // legend:
+            for (i in data.queries) {
+                var l = svg.append("text")
+                        .attr("transform", "translate("+(margin.left+i*boxSize+boxSize/2)+","+(margin.top + boxSize*N+margin.bottom/2)+") rotate(-20)")
+                        .attr("text-anchor", "middle")
+                        .attr("class", "legend"+i)
+                        .attr("dx", "0.35em")
+                        .text(data.queries[i]);
+                l.on("mouseover", mouseOverHandlerX(i));
+                l.on("mouseout",  mouseOutHandler(i,i));
+                l = svg.append("text")
+                        .attr("transform", "translate("+margin.left+","+(margin.top+i*boxSize+boxSize/2)+")")
+                        .attr("text-anchor", "end")
+                        .attr("class", "legend"+i)
+                        .attr("dy", "0.35em")
+                        .text(data.queries[i]);
+                l.on("mouseover", mouseOverHandlerY(i));
+                l.on("mouseout",  mouseOutHandler(i,i));
+            }
+
+            function draw() {
+                data = getRawData(includeMatchList, hideMatchList);
+                console.log("data=");
+                console.log(data);
+
+                grid.selectAll(".gridCell").remove();
+
+                var gridData = [];
+
+                for (i in data.sizes) {
+                    for (j in data.sizes) {
+                        gridData.push({
+                            i: i,
+                            j: j,
+                            size: data.sizes[i][j]
                         });
                     }
-
-                    for (i in data) {
-                        var size_row = [];
-                        for (j in data) {
-                            var jSet = new Set(data[j]);
-                            size_row.push(data[i].filter(function (oid) {
-                                return jSet.has(oid);
-                            }).length);
-                        }
-                        sizes.push(size_row);
-                    }
-
-                    return {
-                        sizes: sizes,
-                        queries: queries,
-                        data: data,
-                        totalFocused: @allObjs.size - hiddenObjs.size
-                    };
                 }
 
-                const boxSize = 100;
-                var i;
-                var includeMatchList = new Set([]);
-                var hideMatchList = new Set([]);
+                console.log("gridData=");
+                console.log(gridData);
 
-                var data;
+                const maxSize = data.totalFocused;
 
-                const N = @dataSets.size;
-                const margin = {top: 0, bottom: 100, left: 200, right: 0};
-                const svg = d3.select("svg")
-                        .attr("width", (N+1)*boxSize+margin.left+margin.right)
-                        .attr("height", (N+1)*boxSize+margin.bottom+margin.top);
-                const grid = svg.append("g")
-                        .attr("transform", "translate("+margin.left+","+margin.top+")")
-                        .attr("width", +svg.attr("width")-margin.left-margin.right)
-                        .attr("height", +svg.attr("height")-margin.top-margin.bottom);
+                const sz = d3.scaleLinear()
+                        .domain([0, maxSize])
+                        .range([0, boxSize - 10]);
 
-                draw();
+                var cells = grid.selectAll("g")
+                        .data(gridData)
+                        .enter()
+                        .append("g")
+                        .attr("class", "gridCell");
 
-                // legend:
-                for (i in data.queries) {
-                    var l = svg.append("text")
-                            .attr("transform", "translate("+(margin.left+i*boxSize+boxSize/2)+","+(margin.top + boxSize*N+margin.bottom/2)+") rotate(-20)")
-                            .attr("text-anchor", "middle")
-                            .attr("class", "legend"+i)
-                            .attr("dx", "0.35em")
-                            .text(data.queries[i]);
-                    l.on("mouseover", mouseOverHandlerX(i));
-                    l.on("mouseout",  mouseOutHandler(i,i));
-                    l = svg.append("text")
-                            .attr("transform", "translate("+margin.left+","+(margin.top+i*boxSize+boxSize/2)+")")
-                            .attr("text-anchor", "end")
-                            .attr("class", "legend"+i)
-                            .attr("dy", "0.35em")
-                            .text(data.queries[i]);
-                    l.on("mouseover", mouseOverHandlerY(i));
-                    l.on("mouseout",  mouseOutHandler(i,i));
-                }
+                cells.attr("transform", function (d) {
+                    return "translate("+(d.i*boxSize)+","+(d.j*boxSize)+")";
+                });
 
-                function draw() {
-                    data = getRawData(includeMatchList, hideMatchList);
-                    console.log("data=");
-                    console.log(data);
+                cells.append("rect")
+                        .attr("class", "rest")
+                        .attr("width",  boxSize - 10)
+                        .attr("height", boxSize - 10);
 
-                    grid.selectAll(".gridCell").remove();
+                cells.append("rect")
+                        .attr("height", function(d) {return boxSize - 10; })
+                        .attr("width", function(d) {return sz(d.size); })
+                        .attr("class", function(d) {
+                            return "matched objectsRectX"+d.i+" objectsRectY"+d.j;
+                        });
 
-                    var gridData = [];
-
-                    for (i in data.sizes) {
-                        for (j in data.sizes) {
-                            gridData.push({
-                                i: i,
-                                j: j,
-                                size: data.sizes[i][j]
-                            });
-                        }
+                cells.on("click", function (d) {
+                    console.log("clicked:");
+                    console.log(d);
+                    if (includeMatchList.has(d.i)) {
+                        includeMatchList.delete(d.i);
+                        hideMatchList.add(d.i);
+                        $(".legend"+(d.i)).css("fill", "#d9d9d9");
+                    } else if (hideMatchList.has(d.i)) {
+                        hideMatchList.delete(d.i);
+                        $(".legend"+d.i).css("fill", "black");
+                    } else {
+                        includeMatchList.add(d.i);
+                        $(".legend"+d.i).css("fill", "steelblue");
                     }
 
-                    console.log("gridData=");
-                    console.log(gridData);
-
-                    const maxSize = data.totalFocused;
-
-                    const sz = d3.scaleLinear()
-                            .domain([0, maxSize])
-                            .range([0, boxSize - 10]);
-
-                    var cells = grid.selectAll("g")
-                            .data(gridData)
-                            .enter()
-                            .append("g")
-                            .attr("class", "gridCell");
-
-                    cells.attr("transform", function (d) {
-                        return "translate("+(d.i*boxSize)+","+(d.j*boxSize)+")";
-                    });
-
-                    cells.append("rect")
-                            .attr("class", "rest")
-                            .attr("width",  boxSize - 10)
-                            .attr("height", boxSize - 10);
-
-                    cells.append("rect")
-                            .attr("height", function(d) {return boxSize - 10; })
-                            .attr("width", function(d) {return sz(d.size); })
-                            .attr("class", function(d) {
-                                return "matched objectsRectX"+d.i+" objectsRectY"+d.j;
-                            });
-
-                    cells.on("click", function (d) {
-                        console.log("clicked:");
-                        console.log(d);
-                        if (includeMatchList.has(d.i)) {
-                            includeMatchList.delete(d.i);
-                            hideMatchList.add(d.i);
-                            $(".legend"+(d.i)).css("fill", "#d9d9d9");
-                        } else if (hideMatchList.has(d.i)) {
-                            hideMatchList.delete(d.i);
-                            $(".legend"+d.i).css("fill", "black");
+                    if (d != j) {
+                        if (includeMatchList.has(d.j)) {
+                            includeMatchList.delete(d.j);
+                            hideMatchList.add(d.j);
+                            $(".legend"+(d.j)).css("fill", "#d9d9d9");
+                        } else if (hideMatchList.has(d.j)) {
+                            hideMatchList.delete(d.j);
+                            $(".legend"+d.j).css("fill", "black");
                         } else {
-                            includeMatchList.add(d.i);
-                            $(".legend"+d.i).css("fill", "steelblue");
+                            includeMatchList.add(d.j);
+                            $(".legend"+d.j).css("fill", "steelblue");
                         }
-
-                        if (d != j) {
-                            if (includeMatchList.has(d.j)) {
-                                includeMatchList.delete(d.j);
-                                hideMatchList.add(d.j);
-                                $(".legend"+(d.j)).css("fill", "#d9d9d9");
-                            } else if (hideMatchList.has(d.j)) {
-                                hideMatchList.delete(d.j);
-                                $(".legend"+d.j).css("fill", "black");
-                            } else {
-                                includeMatchList.add(d.j);
-                                $(".legend"+d.j).css("fill", "steelblue");
-                            }
-                        }
+                    }
 //                                    if (includeMatchList.has(j)) {
 //                                        includeMatchList.delete(j);
 //                                        hideMatchList.add(j);
@@ -237,36 +236,35 @@
 //                                    } else {
 //                                        includeMatchList.add(j);
 //                                    }
-                        console.log(includeMatchList);
-                        console.log(hideMatchList);
-                        draw();
-                    });
+                    console.log(includeMatchList);
+                    console.log(hideMatchList);
+                    draw();
+                });
 
+            }
+            function mouseOverHandlerX(i) {
+                return function() {
+                    $(".matched").css("fill", "C0C0C0");
+                    $(".matched").css("fill", "C0C0C0");
+                    $(".objectsRectX"+i).css("fill", "#5AA7E6");
                 }
-                function mouseOverHandlerX(i) {
-                    return function() {
-                        $(".matched").css("fill", "C0C0C0");
-                        $(".matched").css("fill", "C0C0C0");
-                        $(".objectsRectX"+i).css("fill", "#5AA7E6");
-                    }
-                }
+            }
 
-                function mouseOverHandlerY(i) {
-                    return function() {
-                        $(".matched").css("fill", "C0C0C0");
-                        $(".matched").css("fill", "C0C0C0");
-                        $(".objectsRectY"+i).css("fill", "#5AA7E6");
-                    }
+            function mouseOverHandlerY(i) {
+                return function() {
+                    $(".matched").css("fill", "C0C0C0");
+                    $(".matched").css("fill", "C0C0C0");
+                    $(".objectsRectY"+i).css("fill", "#5AA7E6");
                 }
+            }
 
-                function mouseOutHandler(i,j) {
-                    return function() {
-                        $(".matched").css("fill", "steelblue");
-                        $(".matched").css("fill", "steelblue");
-                    }
+            function mouseOutHandler(i,j) {
+                return function() {
+                    $(".matched").css("fill", "steelblue");
+                    $(".matched").css("fill", "steelblue");
                 }
-        </script>
-    }
+            }
+    </script>
     @for(dataSet <- dataSets) {
         <h2>@dataSet.query</h2>
 
