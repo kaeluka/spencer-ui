@@ -95,6 +95,7 @@
             @for(q <- List(
                 "And(ImmutableObj() AllocatedAt(String.java:1933))",
                 "Or(UniqueObj() ImmutableObj())",
+                "Deeply(Or(UniqueObj() ImmutableObj()))",
                 "ReachableFrom(AllocatedAt(String.java:1933))",
                 "CanReach(AllocatedAt(String.java:1933))"
             )
@@ -410,38 +411,41 @@
 
         <h3>Future Work: The <span class="code">sync</span> table</h3>
 
-        Event indices are numeric. This wrongly suggests that events are ordered
-        by index, even accross threads. This is wrong because the fact that two
-        parallel events ended up in the data base in one particular order does
-        not imply that there was an actual happens-before relation.
-
-        Spencer might, in the future, trace synchronisation points between
-        threads that establishes happens-before accross thread boundaries.
-
+        <p>
+            Event indices are numeric. This wrongly suggests that events are ordered
+            by index, even accross threads. This is wrong because the fact that two
+            parallel events ended up in the data base in one particular order does
+            not imply that there was an actual happens-before relation.
+        </p>
+        <p>
+            Spencer might, in the future, trace synchronisation points between
+            threads that establishes happens-before accross thread boundaries.
+        </p>
 
         <table>
             <thead>
                 <tr>
-                    <td><span class="code">thread1</span></td>
-                    <td class="empty"></td>
-                    <td><span class="code">synchronisationfile1</span></td>
-                    <td><span class="code">synchronisationline1</span></td>
-                    <td><span class="code">event-before</span></td>
-                    <td class="empty"></td>
-                    <td><span class="code">thread2</span></td>
-                    <td class="empty"></td>
-                    <td><span class="code">synchronisationfile1</span></td>
-                    <td><span class="code">synchronisationline1</span></td>
-                    <td><span class="code">event-after</span></td>
-                    <td class="empty"></td>
-                    <td><span class="code">start</span></td>
-                    <td class="empty"></td>
-                    <td><span class="code">end</span></td>
-                    <td class="empty"></td>
-                    <td><span class="code">thread</span></td>
+                    <td><span class="code">sync1-thread</span></td>
+                    <td><span class="code">sync1-file</span></td>
+                    <td><span class="code">sync1-line</span></td>
+                    <td><span class="code">sync1-event-before</span></td>
+                    <td><span class="code">sync2-thread</span></td>
+                    <td><span class="code">sync2-file</span></td>
+                    <td><span class="code">sync2-line</span></td>
+                    <td><span class="code">sync2-event-after</span></td>
                 </tr>
             </thead>
             <tbody>
+                <tr>
+                    <td>...</td>
+                    <td>...</td>
+                    <td>...</td>
+                    <td>...</td>
+                    <td>...</td>
+                    <td>...</td>
+                    <td>...</td>
+                    <td>...</td>
+                </tr>
             </tbody>
         </table>
 
