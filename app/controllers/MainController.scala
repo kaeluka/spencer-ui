@@ -8,11 +8,13 @@ import com.github.kaeluka.spencer.analysis._
 import com.github.kaeluka.spencer.tracefiles.SpencerDB
 import org.apache.spark.graphx.VertexId
 import org.apache.spark.rdd.RDD
+import play.api.cache.{CacheApi, Cached}
 import play.api.data.Forms._
 import play.api.data.{Form, _}
 import play.api.i18n.MessagesApi
 import play.api.inject.ApplicationLifecycle
 import play.api.mvc._
+import play.twirl.api.Html
 
 import scala.concurrent.Future
 
@@ -21,7 +23,9 @@ import scala.concurrent.Future
   * application's home page.
   */
 @Singleton
-class MainController @Inject()(lifecycle: ApplicationLifecycle, messagesApi : MessagesApi) extends Controller {
+class MainController @Inject()(lifecycle: ApplicationLifecycle,
+                               messagesApi : MessagesApi,
+                               cached: Cached) extends Controller {
 
   val dbMap : java.util.HashMap[String, SpencerDB] = new util.HashMap[String, SpencerDB]()
 
@@ -34,9 +38,11 @@ class MainController @Inject()(lifecycle: ApplicationLifecycle, messagesApi : Me
     this.dbMap.get(name)
   }
 
-  def index = Action { implicit request =>
-    implicit val db = getDB("test")
-    Ok(views.html.index())
+  def index = cached("index_page") {
+    Action { implicit request =>
+      implicit val db = getDB("test")
+      Ok(views.html.index())
+    }
   }
 
   def playground = Action { implicit request =>
