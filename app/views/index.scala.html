@@ -20,7 +20,8 @@
         <h1>Spencer, Tracing as a Service</h1>
 
         <p>
-            Spencer is a tool to analyse large program traces using custom queries.
+            Spencer is an online service that lets you analyse large program
+            traces of programs running on the JVM using custom queries.
             Queries in spencer are composable: If you have one analysis, you are
             able to refine it using others.
         </p>
@@ -28,15 +29,16 @@
         <h2>Queries</h2>
 
         <p>
-            Queries in Spencer are expressions that return a set of object IDs. They
-            implement a test: does an object's usage fulfill a certain definition or
+            Queries in Spencer are expressions that return a set of object IDs.
+            They implement a test: does an object's usage fulfill a certain
+            definition or
             not?
         </p>
 
         <p>
-            Spencer distinguishes between primitive queries and composed queries.
-            Primitive queries are the basic building blocks that are implemented
-            "natively" in the backend of the service.
+            Spencer distinguishes between primitive queries and composed
+            queries. Primitive queries are the basic building blocks that are
+            implemented "natively" in the backend of the service.
         </p>
 
         <p>
@@ -79,9 +81,9 @@
         </table>
 
         <p>
-            Spencer's power lies in the fact that these queries all return the same
-            kind of structure: sets of objects! This restriction makes it possible
-            to compose queries into larger ones, like so:
+            Spencer's power lies in the fact that these queries all return the
+            same kind of structure: sets of objects! This restriction makes it
+            possible to compose queries into larger ones, like so:
         </p>
 
         <table class="queries">
@@ -114,50 +116,52 @@
         <h2>What's in the data?</h2>
 
         <p>
-            Spencer contains many data sets. One data set is a program trace (in preprocessed form) that
-            stems from running and instrumenting a program.
-            The data in the program are distributed over several tables.
-            Although these tables are not accessed directly by a user (they are
-            accessed by the primitive queries instead), a user that wants to help
-            Spencer grow must understand the data that they contain.
+            Spencer contains many data sets. One data set is a program trace
+            (in preprocessed form) that stems from running and instrumenting a
+            program. The data in the program are distributed over several
+            tables. Although these tables are not accessed directly by a user
+            (they are accessed by the primitive queries instead), a user that
+            wants to help Spencer grow must understand the data that they
+            contain.
         </p>
 
         <h3>The <span class="code">objects</span> table</h3>
 
         <p>
-            The objects table contains basic information on every object that was
-            encountered during tracing. But see for yourself, below are a few
-            records from our database. As you can see, we identify each object by
-            its unique numeric ID, an object has an optional allocation site, it
-            was created at a certain event ID, and we also record the last time the
-            object was used (loaded, modified, read from, or called).
+            The objects table contains basic information on every object that
+            was encountered during tracing. But see for yourself, below are a
+            few records from our database. As you can see, we identify each
+            object by its unique numeric ID, an object has an optional
+            allocation site, it was created at a certain event ID, and we also
+            record the last time the object was used (loaded, modified, read
+            from, or called).
         </p>
         <p>
-            You notice that there's one line with a negative ID. Those
-            "objects" are pseudo objects that represent a class. Every access to
-            static fields and methods will be reported as an access to this pseudo
+            You notice that there's one line with a negative ID. Those "objects"
+            are pseudo objects that represent a class. Every access to static
+            fields and methods will be reported as an access to this pseudo
             object in the rest of the data.
         </p>
 
         <p>
             You might also notice that the allocation sites are optional.
-            This is a technical limitation: First, some class files do not contain
-            location information and there is no line we could give. Second,
-            some objects are created very early in the startup process, before
-            the instrumentation is running. Third, some objects are allocated by
-            native code -- and we do not instrument native code.
+            This is a technical limitation: First, some class files do not
+            contain location information and there is no line we could give.
+            Second, some objects are created very early in the startup process,
+            before the instrumentation is running. Third, some objects are
+            allocated by native code -- and we do not instrument native code.
         </p>
 
         <div class="aside">
             <p>
                 By the way these tables are interactive. Try hovering your mouse
-                over the event indices. All earlier indices (with a lower number)
-                will become red, all those later (with a higher number) will become
-                green.<br/>
+                over the event indices. All earlier indices (with a lower
+                number) will become red, all those later (with a higher number)
+                will become green.<br/>
 
-                    Also, you may want to click one of the links next to object IDs or
-                    allocation sites. They will bring up the query system. Don't get
-                    lost there yet, though.
+                Also, you may want to click one of the links next to object IDs
+                or allocation sites. They will bring up the query system. Don't
+                get lost there yet, though.
             </p>
         </div>
 
@@ -283,8 +287,8 @@
                 <span class="code useKind">modify</span> for reads or writes of
                 primitive type fields and
                 <span class="code useKind">fieldload</span> or
-                <span class="todo code useKind">fieldstore</span> for reads or writes of
-                reference type fields.
+                <span class="todo code useKind">fieldstore</span> for reads or
+                writes of reference type fields.
         </p>
 
         <table>
