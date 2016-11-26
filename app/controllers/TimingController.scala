@@ -39,7 +39,7 @@ class TimingController @Inject()(lifecycle: ApplicationLifecycle,
       Action { implicit req =>
         implicit val data: SpencerData = mainC.getDB(dbname)
 
-        val query: Either[String, SpencerAnalyser[RDD[VertexId]]] = QueryParser.parseObjQuery(q)
+        val query: Either[String, VertexIdAnalyser] = QueryParser.parseObjQuery(q)
         println("================================ " + q + " -parsed-> " + query.toString)
 
         query match {

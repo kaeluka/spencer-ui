@@ -183,9 +183,9 @@
                             let name = "<span class='code'>." + d.name.replace(/</, "&lt;").replace(/>/, "&gt;") + "<span> ";
                             let lifetime = " (alive until <span class='evtidx'>" + d.end + "</span>)";
                             if (d.callee == @idx) {
-                                return time+": <span class='oid'>"+d.caller+"</span> points "+((d.kind === "field") ? "field " : "")+d.name+" at <span class='code'>this</span>";
+                                return time+": <span class='oid'>"+d.caller+"</span> points "+((d.kind === "field") ? "field " : "")+d.name+" at <span class='code'>this</span> "+lifetime;
                             } else {
-                                return time+": pointing "+((d.kind==="field") ? "field " : "")+"<span class='code'>"+d.name+"</span> at <span class='oid'>"+d.callee+"</span>";
+                                return time+": pointing "+((d.kind==="field") ? "field " : "")+"<span class='code'>"+d.name+"</span> at <span class='oid'>"+d.callee+"</span> "+lifetime;
                             }
                         } else {
                             return "some "+d.type+'<br/>';
