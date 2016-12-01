@@ -16,7 +16,7 @@
 
     <div class="text">
 
-        <h1><img height="100px" alt="Spencer logo" src="@routes.Assets.versioned("images/spencer_logo_bright.svg")"/></h1>
+        <h1><img height="100px" alt="Spencer" src="@routes.Assets.versioned("images/spencer_logo_bright.svg")" /></h1>
         <h2>Tracing as a Service</h2>
 
         <p>
@@ -217,9 +217,8 @@
             References also have a time of when they where established (by
             setting a field or variable, or passing a method argument) and a
             time when they where deleted (when overwriting a field or variable,
-            <span class="todo">for local variables when returning from a method
-                call or for fields when an object is not used any
-                longer</span>).
+            for local variables when returning from a method call or for fields
+            when an object is not used any longer.
         </p>
 
         <table>
@@ -255,7 +254,7 @@
                         <td><span class="evtidx">@rec.getLong("start")</span></td>
                         <td style="padding: 0 1em;"><emph>to</emph></td>
                         <td>@Html(rec.getLongOption("end").map("<span class='evtidx'>"+_+"</span>").getOrElse("<span class='empty'>none</span>"))</td>
-                        <td style="padding: 0 1em;"><emph>established by thread</emph></td>
+                        <td style="padding: 0 1em;"><emph>established by</emph></td>
                         <td><span class="code">@rec.getString("thread")</span></td>
                     </tr>
                 }
@@ -287,7 +286,7 @@
                 <span class="code useKind">modify</span> for reads or writes of
                 primitive type fields and
                 <span class="code useKind">fieldload</span> or
-                <span class="todo code useKind">fieldstore</span> for reads or
+                <span class="code useKind">fieldstore</span> for reads or
                 writes of reference type fields.
         </p>
 
@@ -351,7 +350,7 @@
             the event index of their start and end, we know that if two calls
             in the same thread are nested temporarily, they must also be nested
             on the call stack. The "apropos" view, accessible from object links
-            exploits this for visulisation.
+            <i class="fa fa-indent" aria-hidden="true"></i> exploits this for visulisation.
         </p>
 
         <p><emph>Hint:</emph> try brushing along the event indices in the
@@ -369,7 +368,7 @@
                     <td class="empty"></td>
                     <td><span class="code">callee</span></td>
                     <td class="empty"></td>
-                    <td><span class="code">callee</span></td>
+                    <td><span class="code">callsite</span></td>
                     <td class="empty"></td>
                     <td><span class="code">start</span></td>
                     <td class="empty"></td>
@@ -382,17 +381,17 @@
                 @for(rec <- db.getTable("calls").filter(_.getLong("caller") > 1500).filter(row => row.getString("thread").equals("main")).take(10).sortBy(row => (row.getLong("start"), row.getLong("end")))) {
                     <tr>
                         <td><span class="oid">@rec.getLong("callee")</span></td>
-                        <td style="padding: 0 1em;"><emph>calls method</emph></td>
+                        <td style="padding: 0 1em;"><emph>calls</emph></td>
                         <td><span class="code useKind">@rec.getString("name")</span></td>
-                        <td style="padding: 0 1em;"><emph>on object</emph></td>
+                        <td style="padding: 0 1em;"><emph>on</emph></td>
                         <td><span class="oid">@rec.getString("callee")</span></td>
-                        <td style="padding: 0 1em;"><emph>at callsite</emph></td>
+                        <td style="padding: 0 1em;"><emph>at</emph></td>
                         <td><span class="sourceLocation">@rec.getStringOption("callsitefile"):@rec.getLongOption("callsiteline")</span></td>
-                        <td style="padding: 0 1em;"><emph>from event</emph></td>
+                        <td style="padding: 0 1em;"><i class="fa fa-clock-o" aria-hidden="true"/></td>
                         <td><span class="evtidx">@rec.getLong("start")</span></td>
-                        <td style="padding: 0 1em;"><emph>to</emph></td>
+                        <td style="padding: 0 1em;">&mdash;</td>
                         <td><span class="evtidx">@rec.getLong("end")</span></td>
-                        <td style="padding: 0 1em;"><emph>in thread</emph></td>
+                        <td style="padding: 0 1em;"><i class="fa fa-bolt"/></td>
                         <td><span class="code">@rec.getString("thread")</span></td>
                     </tr>
                 }

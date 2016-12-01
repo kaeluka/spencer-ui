@@ -17,6 +17,7 @@
         <script src="@routes.Assets.versioned("javascripts/jquery.tablesorter.js")" type="text/javascript"></script>
         <script src="@routes.Assets.versioned("javascripts/randomColor.js")" type="text/javascript"></script>
         <script src="@routes.Assets.versioned("javascripts/treemap-squared/treemap-squared-latest.min.js")" type="text/javascript"></script>
+        <link rel="stylesheet" href="https://opensource.keycdn.com/fontawesome/4.7.0/font-awesome.min.css " type="text/css" />
         @*<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>*@
         <script src="https://d3js.org/d3.v4.min.js"></script>
 
@@ -87,7 +88,7 @@
                 $("span.oid").each(function (i, s) {
                     let oid = s.innerHTML;
                     let query = base.replace(/THEQUERY/g, ""+oid).replace(new RegExp("^\/"+COMMAND), "/apropos");
-                    s.innerHTML = oid+" <a target='_blank' class='hint' href='"+query+"'>apropos</a>"
+                    s.innerHTML = oid+"<a style='margin-left: 3px;' target='_blank' class='hint' href='"+query+"'><i class='fa fa-indent'></i></a>"
                 });
 
                 $("span.eventComment").each(function (i, s) {
@@ -110,14 +111,8 @@
                     s.className += " "+kind;
                 });
 
-                $( "#selectable" ).selectable({
-                    stop: function() {
-                        var result = $( "#select-result" ); //.empty();
-                        $( ".ui-selected", this ).each(function() {
-                            var index = $( "#selectable li" ).index( this );
-                            result.append( " #" + ( index + 1 ) );
-                        });
-                    }
+                $(".sourceLocation").each(function (i, s) {
+                    s.innerHTML = '<i class="fa fa-file-text-o" aria-hidden="true" style="margin-right:3px;"></i>'+s.innerHTML;
                 });
         </script>
     </body>

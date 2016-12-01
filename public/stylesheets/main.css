@@ -10,6 +10,10 @@ span.code {
     font-family: 'DejaVu Sans Mono', monospace;
 }
 
+span.sourceLocation {
+    font-family: 'DejaVu Sans Mono', monospace;
+}
+
 /*span.query {*/
     /*border: 1px solid #808967;*/
     /*background-color: #f0ffc3;*/
