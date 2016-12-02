@@ -127,7 +127,7 @@
                 .append("h3")
                 .attr("class", "code")
                 .html(function (d,i) {
-                    return d;
+                    return '<i class="fa fa-bolt"/>'+d;
                 });
 
         let callsDiv = threadDivs
@@ -151,7 +151,7 @@
                             let caller = (d.caller == @idx) ? "calling " : "<span class='oid'>" + d.caller + "</span> calls ";
                             let callee = (d.callee == @idx) ? "<span class='code'>this</span>" : "<span class='oid'>" + d.callee + "</span>";
                             let name = "<span class='code'>."+d.name.replace(/</, "&lt;").replace(/>/, "&gt;") + "<span>";
-                            let loc = "<span class='callsite'>"+d.callsite+"</span>";
+                            let loc = "<span class='sourceLocation'>"+d.callsite+"</span>";
                             return time + ": " + caller + callee + name + "(..) at " + loc + "<br/>";
                         } else if (d.type === "use") {
                             if (d.caller == @idx) {

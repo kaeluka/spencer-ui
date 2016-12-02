@@ -51,7 +51,7 @@
                 $("span.allocationsite").each(function (i, s) {
                     let allocationSite = s.innerHTML;
                     let query = base.replace(/THEQUERY/g, "AllocatedAt("+allocationSite+")");
-                    s.innerHTML = allocationSite+" <a href='"+query+"'>all allocated here</a>";
+                    s.innerHTML = allocationSite+"<a href='"+query+"'><i class='fa fa-filter'/></a>";
                     if (QUERIES) {
                         var newQ = "AllocatedAt("+allocationSite+")/"+QUERIES.join("/");
                         newQ = base.replace(/THEQUERY/g, newQ);
@@ -109,6 +109,10 @@
                 $(".useKind").each(function (i, s) {
                     let kind = s.innerHTML;
                     s.className += " "+kind;
+                });
+
+                $(".threadName").each(function (i, s) {
+                    s.innerHTML = '<i class="fa fa-bolt" aria-hidden="true" style="margin-right:3px;"></i>'+s.innerHTML;
                 });
 
                 $(".sourceLocation").each(function (i, s) {
