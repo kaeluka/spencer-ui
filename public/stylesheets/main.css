@@ -18,6 +18,9 @@ span.threadName {
     font-family: 'DejaVu Sans Mono', monospace;
 }
 
+.logoBox3 {
+    fill: red;
+}
 /*span.query {*/
     /*border: 1px solid #808967;*/
     /*background-color: #f0ffc3;*/
@@ -26,7 +29,6 @@ span.threadName {
     /*margin: 0.1em 0.1em;*/
 /*}*/
 .query {
-    /*background-color: #ffe1df;*/
     border-left: solid #c83737;
     border-right: solid #c83737;
     border-radius: 0.5em;
@@ -35,6 +37,23 @@ span.threadName {
 div.query {
     padding-left: 1.2em;
     text-indent: -1em;
+}
+
+table tr td {
+    padding-left: 0.25em;
+    padding-right: 0.25em;
+}
+
+table thead tr td {
+    background-color: #c83737;
+    color: white;
+}
+
+table {
+    margin-top: 2em;
+    margin-bottom: 2em;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .query a {

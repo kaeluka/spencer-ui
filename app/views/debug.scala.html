@@ -1,0 +1,61 @@
+@import com.fasterxml.jackson.databind.JsonNode
+@import play.libs.Json
+@(jsonText: JsonNode)
+@main("Debug") {
+    <h1><i class="fa fa-heart"> </i></h1>
+
+    <table id="jobsTable">
+    </table>
+    <script>
+            let jobs = @(Html(Json.prettyPrint(jsonText)));
+            const columns = [
+                "jobId",
+                "name",
+                "submissionTime",
+                "completionTime",
+                "stageIds",
+                "status",
+                "numTasks",
+                "numActiveTasks",
+                "numCompletedTasks",
+                "numSkippedTasks",
+                "numFailedTasks",
+                "numActiveStages",
+                "numCompletedStages",
+                "numSkippedStages",
+                "numFailedStages"
+            ];
+            const nColumns = columns.length;
+
+            let table = d3.select("#jobsTable");
+
+            table.append("thead").append("tr").selectAll("td").data(columns).enter().append("td").text(function (k) { return k; });
+
+            table
+                    .append("tbody")
+                    .selectAll("tr")
+                    .data(jobs)
+                    .enter()
+                    .append("tr")
+                    .selectAll("td")
+                    .data(function (d) {
+                        if (! d.completionTime) {
+                            d.completionTime = 'n/a';
+                        }
+                        let vals = [];
+                        for (let i = 0; i<nColumns; ++i) {
+                            vals.push(d[columns[i]]);
+                        }
+                        return vals;
+                    })
+                    .enter()
+                    .append("td")
+                    .text(function (d) {
+                        return d;
+                    });
+
+    </script>
+
+
+    <meta http-equiv="refresh" content="5" />
+}

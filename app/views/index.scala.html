@@ -45,20 +45,6 @@
             The primitive queries are:
         </p>
 
-        <style>
-            table thead tr td {
-                background-color: #c83737;
-                color: white;
-            }
-
-            table {
-                margin-top: 2em;
-                margin-bottom: 2em;
-                margin-left: auto;
-                margin-right: auto;
-            }
-        </style>
-
         <script>
             var COMMAND='perobj';
             var DBNAME='test';
@@ -68,6 +54,7 @@
             <thead>
                 <tr>
                     <td>Query</td>
+                    <td class="empty"></td>
                     <td>Meaning</td>
                 </tr>
             </thead>
@@ -75,7 +62,8 @@
             @for(q <- QueryParser.primitiveQueries()) {
                 <tr>
                     <td><div class="query">@q.toString</div></td>
-                    <td><span class="queryExplanation">All objects that @(q.explanation) .</span></td>
+                    <td>&mdash;</td>
+                    <td><span class="queryExplanation">All objects that @(q.explanation).</span></td>
                 </tr>
             }
             </tbody>

@@ -27,15 +27,16 @@ class MainController @Inject()(lifecycle: ApplicationLifecycle,
                                messagesApi : MessagesApi,
                                cached: Cached) extends Controller {
 
-  val dbMap : java.util.HashMap[String, SpencerDB] = new util.HashMap[String, SpencerDB]()
+  var dbMap : Map[String, SpencerDB] = Map[String, SpencerDB]()
 
   def getDB(name: String): SpencerDB = {
-    if (! this.dbMap.containsKey(name)) {
-      this.dbMap.put(name, new SpencerDB(name))
-      this.dbMap.get(name).connect()
-      this.lifecycle.addStopHook { () => Future.successful(this.dbMap.get(name).db.shutdown()) }
+    if (! this.dbMap.contains(name)) {
+      val db: SpencerDB = new SpencerDB(name)
+      db.connect()
+      this.dbMap = this.dbMap + (name -> db)
+      this.lifecycle.addStopHook { () => Future.successful(db.shutdown()) }
     }
-    this.dbMap.get(name)
+    this.dbMap(name)
   }
 
   def index = cached("index_page") {
