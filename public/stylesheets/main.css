@@ -10,28 +10,36 @@ span.code {
     font-family: 'DejaVu Sans Mono', monospace;
 }
 
-span.sourceLocation {
+.sourceLocation {
     font-family: 'DejaVu Sans Mono', monospace;
 }
 
-span.threadName {
+.threadName {
     font-family: 'DejaVu Sans Mono', monospace;
 }
 
-.logoBox3 {
-    fill: red;
+.klassName {
+    font-family: 'DejaVu Sans Mono', monospace;
 }
-/*span.query {*/
-    /*border: 1px solid #808967;*/
-    /*background-color: #f0ffc3;*/
-    /*border-radius: 0.5em;*/
-    /*padding: 0.1em 0.5em;*/
-    /*margin: 0.1em 0.1em;*/
-/*}*/
+
 .query {
     border-left: solid #c83737;
     border-right: solid #c83737;
     border-radius: 0.5em;
+}
+
+div.queriesVsListWrapper {
+    text-align: center;
+}
+
+ul.queriesVsList {
+    display: inline-flex;
+    padding: 0;
+}
+
+ul.queriesVsList li {
+    list-style: none;
+    padding: 1em;
 }
 
 div.query {
@@ -39,12 +47,22 @@ div.query {
     text-indent: -1em;
 }
 
+svg.resultMatrix {
+    display: block;
+    padding-top: 2em;
+    padding-bottom: 2em;
+    /*border: 1px solid;*/
+
+    margin-left: auto;
+    margin-right: auto;
+}
+
 table tr td {
     padding-left: 0.25em;
     padding-right: 0.25em;
 }
 
-table thead tr td {
+table thead tr th {
     background-color: #c83737;
     color: white;
 }
@@ -62,7 +80,7 @@ table {
     margin: 0 0.5em;
 }
 
-span.eventComment {
+.eventComment {
     font-style: italic;
     font-size: smaller;
 }
@@ -71,7 +89,7 @@ a.hint {
     font-size: x-small;
 }
 
-span.queryExplanation {
+.queryExplanation {
     font-style: italic;
 }
 
@@ -151,6 +169,27 @@ div.text p {
 
 .useKind.varload {
     color: #1c94c4;
+}
+
+div.dataSetsContainer {
+    display: flex;
+}
+
+div.dataSetsContainer div {
+    fill: red;
+    -moz-box-shadow: 0 0 30px 5px #999;
+    -webkit-box-shadow: 0 0 30px 5px #999;
+}
+
+div.result {
+    border-top: 5px solid grey;
+    border-bottom: 5px solid grey;
+    margin-left: 5%;
+    margin-right: 5%;
+}
+
+div.footer {
+    /*color: #f0e4e4;*/
 }
 
 #feedback { font-size: 1.4em; }

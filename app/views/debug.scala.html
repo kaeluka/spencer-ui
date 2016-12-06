@@ -29,7 +29,14 @@
 
             let table = d3.select("#jobsTable");
 
-            table.append("thead").append("tr").selectAll("td").data(columns).enter().append("td").text(function (k) { return k; });
+            table
+                    .append("thead")
+                    .append("tr")
+                    .selectAll("td")
+                    .data(columns)
+                    .enter()
+                    .append("td")
+                    .text(function (k) { return k; });
 
             table
                     .append("tbody")

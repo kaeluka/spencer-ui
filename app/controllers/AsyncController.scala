@@ -34,7 +34,8 @@ class AsyncController @Inject() (actorSystem: ActorSystem)(implicit exec: Execut
 
   private def getFutureMessage(delayTime: FiniteDuration): Future[String] = {
     val promise: Promise[String] = Promise[String]()
-    actorSystem.scheduler.scheduleOnce(delayTime) { promise.success("Hi!") }
+    println("starting")
+    actorSystem.scheduler.scheduleOnce(delayTime) { println("done"); promise.success("Hi!") }
     promise.future
   }
 

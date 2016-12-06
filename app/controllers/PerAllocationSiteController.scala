@@ -18,14 +18,14 @@ object PerAllocationSiteControllerUtil {
     (if (succ > 0) {
       val newQueries = queries
         .map("And("+_+" AllocatedAt("+allocationSite+"))").mkString("/")
-      s"$succ <a href='${routes.QueryController.perobj(dbname, newQueries)}' class='hint'>show</a>"
+      s"$succ <a href='${routes.PerObjController.perobj(dbname, newQueries)}' class='hint'>show</a>"
     } else {
       succ.toString
     },
       if (fail > 0) {
         val newQueries = queries
           .map("And(Not("+_+") AllocatedAt("+allocationSite+"))").mkString("/")
-        s"$fail <a href='${routes.QueryController.perobj(dbname, newQueries)}' class='hint'>show</a>"
+        s"$fail <a href='${routes.PerObjController.perobj(dbname, newQueries)}' class='hint'>show</a>"
       } else {
         fail.toString
       })

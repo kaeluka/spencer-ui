@@ -1,0 +1,345 @@
+@import com.github.kaeluka.spencer.analysis.VertexIdAnalyser
+@(dbname: String, queries: Seq[VertexIdAnalyser])
+
+@main(queries.mkString(" / ")) {
+
+
+    <style>
+    .resultMatrix rect.matched {
+        fill: #C83737;
+    }
+
+    rect.rest {
+        fill: #d9d9d9;
+    }
+    </style>
+
+    <h1>Query</h1>
+
+    <div class="queriesVsListWrapper">
+        <ul class="queriesVsList">
+        @for((q, i) <- queries.zipWithIndex) {
+            <li id="queryLi-@i"><span class="query">@q</span> <i id="spinner-@i" class="fa fa-spinner fa-spin" aria-hidden="true"></i></li>
+        }
+        </ul>
+    </div>
+
+    <script>
+            var COMMAND = "query";
+            var DBNAME  = "@dbname";
+            var QUERIES = [@Html(queries.map("'"+_.toString+"'").mkString(", "))];
+    </script>
+
+    <div class="result">
+
+        <svg class="resultMatrix"></svg>
+        <div class="log" width="500" height="200"></div>
+
+        <script>
+                var color = randomColor({count: @(queries.size), seed: 123});
+
+                var allObjs = [];
+                {
+                    const req = new XMLHttpRequest();
+                    req.open("GET", '@routes.QueryController.json_select(dbname, "Obj()")');
+                    req.onload = (e) => {
+                        allObjs = JSON.parse(req.responseText).objects;
+                        requestAllData();
+                    };
+                    req.send(null);
+                }
+
+                var dataBuffer = {
+                    data: {},
+                    arrived: []
+                };
+                function requestAllData() {
+                    @for((q, i) <- queries.zipWithIndex) {
+                    {
+                        dataBuffer.data["@q.toString"] = [];
+                        const req = new XMLHttpRequest();
+                        req.open("GET", "@routes.QueryController.json_select(dbname, q.toString)");
+                        req.onload = function (e) {
+                            console.log({req});
+                            const resp = JSON.parse(req.responseText);
+                            dataBuffer.data["@q.toString"] = resp.objects;
+                            dataBuffer.arrived.push("@q.toString");
+                            const spinner = document.getElementById("spinner-@i");
+                            spinner.parentNode.removeChild(spinner);
+                            draw();
+                        };
+                        req.send(null);
+                    }
+                    }
+                    draw();
+                }
+
+                /**
+                 * Returns the data, projected:
+                 * if a query is in focusMatch, then only objects that match the query will be returned,
+                 * if a query is in focusNonmatch, then only objects that do NOT match the query will be returned
+                 *
+                 * param focusMatch
+                 * param focusNonmatch
+                 * returns {{sizes: Array, queries: Array, explanations: Array, data: Array, totalFocused: Number}}
+                 */
+                function getRawData(focusMatch, focusNonmatch) {
+                    const N = @queries.length;
+                    const queries = [];
+                    const explanations = [];
+                    const sizes = [];
+                    const data = [];
+
+                    @for(q <- queries) {
+                    {
+                        /////@(q.toString)
+                        let query = "@q.toString";
+                        queries.push("@(q.toString)");
+                        explanations.push("Objects that @(q.explanation).");
+
+                        data[query] = {
+                            pass: undefined,
+                            fail: undefined
+                        };
+
+                        data[query].pass = dataBuffer.data[query];
+
+                        let querySet = new Set(data[query].pass);
+                        data[query].fail = allObjs.filter(o => ! querySet.has(o));
+
+                        console.log("out of "+allObjs.length+" objects: ");
+                        console.log("query "+query+" has "+data[query].pass.length+" passes, "+data[query].fail.length+" failures");
+
+                        console.log({
+                            pass: data[query].pass,
+                            querySet,
+                            fail: data[query].fail
+                        });
+                    }
+                    }
+
+                    let excludedObjs = [];
+
+                    for (m of focusMatch){
+                        console.log("focusing on passes of "+m);
+                    }
+                    for (m of focusNonmatch){
+                        console.log("focusing on failures of "+m);
+                    }
+
+                    for (let q of focusMatch) {
+                        excludedObjs = excludedObjs.concat(data[q].fail);
+                    }
+
+                    for (let q of focusNonmatch) {
+                        excludedObjs = excludedObjs.concat(data[q].pass);
+                    }
+                    excludedObjs = new Set(excludedObjs);
+                    console.log("excluding "+excludedObjs.size+" objects");
+
+                    for (let i in data) {
+                        data[i].pass = data[i].pass.filter(oid => ! excludedObjs.has(oid));
+                        data[i].fail = data[i].fail.filter(oid => ! excludedObjs.has(oid));
+                    }
+
+                    for (let i in data) {
+                        var size_row = [];
+                        var iSet = new Set(data[i].pass);
+                        for (let j in data) {
+                            let f = data[j].pass.filter((oid) => iSet.has(oid));
+                            size_row.push(
+                                    f.length
+                            );
+                        }
+                        console.log(size_row+" - "+i);
+                        sizes.push(size_row);
+                    }
+
+                    return {
+                        sizes: sizes,
+                        queries: queries,
+                        explanations: explanations,
+                        data: data,
+                        totalFocused: allObjs.length - excludedObjs.size
+                    };
+                }
+
+                const boxSize = 100;
+                var includeMatchList = new Set([]);
+                var hideMatchList = new Set([]);
+
+
+                const N = @queries.size; //number of queries
+                const margin = {top: 0, bottom: 100, left: 200, right: 400};
+                const svg = d3.select("svg")
+                        .attr("width", (N)*boxSize+margin.left+margin.right)
+                        .attr("height", (N)*boxSize+margin.bottom+margin.top);
+                const grid = svg.append("g")
+                        .attr("transform", "translate("+margin.left+","+margin.top+")")
+                        .attr("width", +svg.attr("width")-margin.left-margin.right)
+                        .attr("height", +svg.attr("height")-margin.top-margin.bottom);
+
+                function draw() {
+                    const data = getRawData(includeMatchList, hideMatchList);
+
+                    grid.selectAll(".gridCell").remove();
+
+                    var gridData = [];
+
+                    for (let i in data.sizes) {
+                        for (j in data.sizes) {
+                            gridData.push({
+                                i: i,
+                                j: j,
+                                size: data.sizes[i][j]
+                            });
+                        }
+                    }
+
+                    const maxSize = data.totalFocused;
+
+                    const sz = d3.scaleLinear()
+                            .domain([0, maxSize])
+                            .range([0, boxSize - 10]);
+
+                    var cells = grid.selectAll("g")
+                            .data(gridData)
+                            .enter()
+                            .append("g")
+                            .attr("class", "gridCell");
+
+                    cells.attr("transform", function (d) {
+                        return "translate("+(d.i*boxSize)+","+(d.j*boxSize)+")";
+                    });
+
+                    cells.append("rect")
+                            .attr("class", "rest")
+                            .attr("width",  boxSize - 10)
+                            .attr("height", boxSize - 10)
+                            //FIXME: use this handler :)
+                            .on("click", (fail, i) => console.log({fail}));
+
+                    cells.append("rect")
+                            .attr("height",    (d) => sz(d.size))
+                            .attr("transform", (d) => "translate(0, "+(boxSize - 10 - sz(d.size))+")")
+                            .attr("width", (d) => boxSize - 10 )
+                            .attr("class", (d) => "matched objectsRectX"+d.i+" objectsRectY"+d.j )
+                            //FIXME: use this handler :)
+                            .on("click", (pass, i) => console.log({pass}) );
+                    cells.append("text")
+                            .attr("height",    boxSize - 10)
+                            .attr("transform", (d) => "translate(0, "+(boxSize - 10)+")")
+                            .text((d) => d.size+" - "+Math.round(100*d.size/data.totalFocused)+"%");
+//                            .attr("width", (d) => boxSize - 10 )
+//                            .attr("class", (d) => "matched objectsRectX"+d.i+" objectsRectY"+d.j )
+
+                    // legend:
+                    svg.selectAll("text.legendBottom")
+                            .data(data.queries)
+                            .enter()
+                            .append("text")
+                            .attr("class", (d, i) => "legendBottom legend"+i)
+                            .attr("text-anchor", "middle")
+                            .attr("transform",
+                                    (d, i) =>
+                                    "translate("+(margin.left+i*boxSize+boxSize/2)+","+
+                                    (margin.top + boxSize*N+margin.bottom/2)+") rotate(-10)" )
+                            .text((d, i) => d)
+                            .on("click",     clickHandler      )
+                            .on("mouseover", mouseOverHandlerX )
+                            .on("mouseout",  mouseOutHandler   );
+
+                    svg.selectAll("text.legendLeft")
+                            .data(data.queries)
+                            .enter()
+                            .append("text")
+                            .attr("class", (d, i) => "legendLeft legend"+i)
+                            .attr("text-anchor", "end")
+                            .attr("dy", "0.35em")
+                            .attr("transform", (d, i) => "translate("+margin.left+","+(margin.top+i*boxSize+boxSize/2)+")" )
+                            .text((d, i) => d)
+                            .on("click",     clickHandler      )
+                            .on("mouseover", mouseOverHandlerY )
+                            .on("mouseout",  mouseOutHandler   );
+
+                    svg.selectAll("text.explanation")
+                            .data(data.queries)
+                            .enter()
+                            .append("text")
+                            .attr("transform", (d, i) => "translate("+(margin.left+N*boxSize)+","+(margin.top+i*boxSize+boxSize/2)+")")
+                            .attr("class", "explanation")
+                            .attr("text-anchor", "start")
+                            .attr("dy", "0.35em")
+                            .text((d,i) => data.explanations[i])
+                            .on("click",     clickHandler      )
+                            .on("mouseover", mouseOverHandlerY )
+                            .on("mouseout",  mouseOutHandler   );
+
+                    // "loading" symbols:
+                    cells.append("i")
+                            .attr("class", "fa fa-spinner")
+                            .attr
+                }
+
+                function clickHandler(d, i) {
+                    console.log("click "+i);
+                    if (includeMatchList.has(QUERIES[i])) {
+                        includeMatchList.delete(QUERIES[i]);
+                        hideMatchList.add(QUERIES[i]);
+                        $(".legend"+i).css("fill", "#d9d9d9");
+                    } else if (hideMatchList.has(QUERIES[i])) {
+                        hideMatchList.delete(QUERIES[i]);
+                        $(".legend"+i).css("fill", "black");
+                    } else {
+                        includeMatchList.add(QUERIES[i]);
+                        $(".legend"+i).css("fill", "#C83737");
+                    }
+                    draw();
+                }
+
+                function mouseOverHandlerX(d, i) {
+                    $(".matched").css("fill", "C0C0C0");
+                    $(".objectsRectX"+i).css("fill", "#EE4343");
+                }
+
+                function mouseOverHandlerY(d, i) {
+                    $(".matched").css("fill", "C0C0C0");
+                    $(".objectsRectY"+i).css("fill", "#EE4343");
+                }
+
+                function mouseOutHandler(d, i) {
+                    $(".matched").css("fill", "#C83737");
+                }
+        </script>
+        <div class="dataSetsContainer">
+        </div>
+
+    </div>
+
+    <div class="footer">
+        <ul id="jsonLinks">
+        </ul>
+    </div>
+
+    <script>
+        console.log({QUERIES});
+        let allObjsSelection = "@(routes.QueryController.json_select(dbname, "Obj()"))";
+        let allObjsMeta = "@(routes.QueryController.json_meta(dbname, "Obj()"))";
+        d3.select("#jsonLinks")
+                .selectAll("li")
+                .data(QUERIES)
+                .enter()
+                .append("li")
+                .append("a")
+                .attr("href", function(d,i) {
+                    let regex = new RegExp("Obj\(\)");
+                    return allObjsSelection.replace(regex, d);
+                })
+                .text((d,i) => d+" (JSON)");
+        d3.select("#jsonLinks")
+                .append("li")
+                .append("a")
+                .attr("href", allObjsMeta)
+                .text("Meta information (JSON)")
+    </script>
+}

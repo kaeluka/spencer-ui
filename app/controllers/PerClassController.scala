@@ -20,12 +20,12 @@ case class PerClassData(dbname: String, query: String, data: Seq[PerClassDataIte
 object PerClassControllerUtil {
   def successCountAndFailCountTexts(dbname: String, query: String, klass: String, succ: Int, fail: Int) : (String, String) = {
     (if (succ > 0) {
-      s"$succ <a href='${routes.QueryController.perobj(dbname, s"And($query InstanceOfClass($klass))")}' class='hint'>show</a>"
+      s"$succ <a href='${routes.PerObjController.perobj(dbname, s"And($query InstanceOfClass($klass))")}' class='hint'>show</a>"
     } else {
       succ.toString
     },
       if (fail > 0) {
-        s"$fail <a href='${routes.QueryController.perobj(dbname, s"And(Not($query) InstanceOfClass($klass))")}' class='hint'>show</a>"
+        s"$fail <a href='${routes.PerObjController.perobj(dbname, s"And(Not($query) InstanceOfClass($klass))")}' class='hint'>show</a>"
       } else {
         fail.toString
       })

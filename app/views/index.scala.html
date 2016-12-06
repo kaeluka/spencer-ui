@@ -46,11 +46,11 @@
         </p>
 
         <script>
-            var COMMAND='perobj';
+            var COMMAND='query';
             var DBNAME='test';
         </script>
 
-        <table class="queries">
+        <table style="width: 60%;" class="queries">
             <thead>
                 <tr>
                     <td>Query</td>
@@ -63,7 +63,7 @@
                 <tr>
                     <td><div class="query">@q.toString</div></td>
                     <td>&mdash;</td>
-                    <td><span class="queryExplanation">All objects that @(q.explanation).</span></td>
+                    <td><div class="queryExplanation">All objects that @(q.explanation).</div></td>
                 </tr>
             }
             </tbody>
@@ -75,11 +75,12 @@
             possible to compose queries into larger ones, like so:
         </p>
 
-        <table class="queries">
+        <table style="width: 75%;" class="queries">
             <thead>
                 <tr>
-                    <td>Query</td>
-                    <td>Meaning</td>
+                    <th>Query</th>
+                    <th class="empty"></th>
+                    <th>Meaning</th>
                 </tr>
             </thead>
             <tbody>
@@ -94,11 +95,26 @@
                     .map(x => { assert(x.isRight, x+" must be right!"); x.right.get })) {
                 <tr>
                     <td><div class="query">@q.toString</div></td>
-                    <td><span class="queryExplanation">All objects that @(q.explanation).</span></td>
+                    <td>&mdash;</td>
+                    <td><div class="queryExplanation">All objects that @(q.explanation).</div></td>
                 </tr>
             }
             </tbody>
         </table>
+
+        <p>
+            Assembling queries from smaller parts is nice &mdash; but sometimes,
+                you'll want to compare different queries with each other: how do
+                prevalent are mutability, stationarity, and immutability, compared to
+                each other? Comparing queries with each other can be done by separating
+                several queries with a slash, like so:
+                <span class="query">MutableObj()/StationaryObj()/ImmutableObj()</span>.
+        </p>
+
+        <p>
+            These combined queries bring up an interactive visualisation, try
+            clicking on the query name labels..
+        </p>
 
         <h2>The design of Queries</h2>
 
@@ -276,7 +292,12 @@
                 primitive type fields and
                 <span class="code useKind">fieldload</span> or
                 <span class="code useKind">fieldstore</span> for reads or
-                writes of reference type fields.
+                writes of reference type fields. <emph>Reference type
+                variables</emph> are treated as if they were fields that are
+                exclusive to a method, they are represented by records of kind
+                <span class="code useKind">varload</span>, or
+                <span class="code useKind">varstore</span>, respectively.
+                Variables of primitive types are not traced.
         </p>
 
         <table>
@@ -298,7 +319,9 @@
             <tbody>
                 @for(rec <- (db.getTable("uses").filter(_.getLong("caller") > 1500).filter(row => "modify"    .equals(row.getString("kind"))).take(3) ++
                              db.getTable("uses").filter(_.getLong("caller") > 1500).filter(row => "fieldstore".equals(row.getString("kind"))).take(2) ++
-                             db.getTable("uses").filter(_.getLong("caller") > 1500).filter(row => "fieldload" .equals(row.getString("kind"))).take(5) ++
+                             db.getTable("uses").filter(_.getLong("caller") > 1500).filter(row => "fieldload".equals(row.getString("kind"))).take(2) ++
+                             db.getTable("uses").filter(_.getLong("caller") > 1500).filter(row => "varload".equals(row.getString("kind"))).take(5) ++
+                             db.getTable("uses").filter(_.getLong("caller") > 1500).filter(row => "varstore" .equals(row.getString("kind"))).take(2) ++
                              db.getTable("uses").filter(_.getLong("caller") > 1500).filter(row => "read"      .equals(row.getString("kind"))).take(5)).sortBy(_.getLong("idx"))) {
                     <tr>
                         <td><span class="oid">@rec.getLong("caller")</span></td>
@@ -306,7 +329,7 @@
                         <td><span class="code useKind">@rec.getString("kind")</span></td>
                         <td style="padding: 0 1em;"><emph>of field</emph></td>
                         <td><span class="code">@rec.getString("name")</span></td>
-                        <td style="padding: 0 1em;"><emph>of object</emph></td>
+                        <td style="padding: 0 1em;"><emph>of</emph></td>
                         <td><span class="oid">@rec.getLong("callee")</span></td>
                         <td style="padding: 0 1em;"><i class="fa fa-clock-o"/></td>
                         <td><span class="evtidx">@rec.getLong("idx")</span></td>

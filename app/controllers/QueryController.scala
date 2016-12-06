@@ -1,28 +1,21 @@
 package controllers
 
-import java.util
+import play.api.libs.json.Json
 import javax.inject._
+
+import com.github.kaeluka.spencer.analysis.SpencerGraphImplicits._
+import com.github.kaeluka.spencer.analysis._
+import org.apache.spark.graphx.VertexId
+import play.api.cache.Cached
+import play.api.i18n.MessagesApi
+import play.api.inject.ApplicationLifecycle
+import play.api.libs.json.Json.toJson
+import play.api.mvc._
 
 import scala.concurrent.duration._
 
-import play.api._
-import play.api.mvc._
-import play.api.data._
-import play.api.data.Forms._
-import com.github.kaeluka.spencer.analysis._
-import com.github.kaeluka.spencer.tracefiles.SpencerDB
-import com.github.kaeluka.spencer.analysis.SpencerGraphImplicits._
-import org.apache.spark.graphx.VertexId
-import org.apache.spark.rdd.RDD
-import play.api.cache.Cached
-import play.api.data.Form
-import play.api.i18n.MessagesApi
-import play.api.inject.ApplicationLifecycle
-
-import scala.concurrent.Future
-
 case class QueryDataItem(oid: VertexId, klass: Option[String], allocationSite: Option[String])
-case class QueryData(dbname: String, query: String, data: Seq[QueryDataItem])
+case class QueryData(dbname: String, query: String, explanation: String, data: Seq[QueryDataItem])
 
 object QueryControllerUtil {
 
@@ -31,8 +24,8 @@ object QueryControllerUtil {
     val inner = optKlass match {
       case Some(klass) =>
         klass +
-          s" <a class='hint' href='" + routes.QueryController.perobj(dbname, "InstanceOfClass(" + klass + ")") +"'>all instances</a>" +
-          " <a class='hint' href='" + routes.QueryController.perobj(dbname, "And("+query+ " InstanceOfClass(" + klass + "))") +"'>.. + all instances</a>" +
+          s" <a class='hint' href='" + routes.PerObjController.perobj(dbname, "InstanceOfClass(" + klass + ")") +"'>all instances</a>" +
+          " <a class='hint' href='" + routes.PerObjController.perobj(dbname, "And("+query+ " InstanceOfClass(" + klass + "))") +"'>.. + all instances</a>" +
           (if (! klass.startsWith("[")) {
             " <a class='hint' href='" + routes.SourceCodeController.query(dbname, klass) +"'>view source</a>"
           } else {
@@ -57,31 +50,68 @@ class QueryController @Inject()(lifecycle: ApplicationLifecycle,
                                 mainC: MainController,
                                 cached: Cached) extends Controller {
 
-  def queryDataPost(dbname: String) = Action { implicit request =>
-    val selected = request.rawQueryString.split("&").map(_.replace("=on", "").replace("chk-", "").toLong).mkString(" ")
-
-    Redirect(routes.QueryController.perobj("test", "Set("+selected+")"))
+  def json_meta(dbname: String, q: String = "Obj()") = cached(
+    {_: RequestHeader => s"json/$q"},
+    6.hours.toSeconds.asInstanceOf[Int]) {
+    Action { implicit req =>
+      implicit val data: SpencerData = mainC.getDB(dbname)
+      QueryParser.parseObjQuery(q) match {
+        case Right(qObj) =>
+          val objs = WithMetaInformation(qObj).analyse.collect()
+          Ok(Json.obj(
+            "query"   -> q,
+            "dbname"  -> dbname,
+            "objects" -> Json.toJson(objs.map(
+              o => Json.toJson(
+                Map(
+                  "oid"            -> Some(toJson(o.oid)),
+                  "allocationsite" -> o.allocationSite.map(toJson(_)),
+                  "class"          -> o.klass.map(toJson(_)),
+                  "firstUsage"     -> Some(toJson(o.firstUsage)),
+                  "lastUsage"      -> Some(toJson(o.lastUsage)),
+                  "thread"         -> o.thread.map(toJson(_))
+                ).filter(_._2.isDefined)
+              )
+            ))))
+        case Left(_) =>
+          NotAcceptable("could not parse the query '" + q)
+      }
+    }
   }
+  def json_select(dbname: String, q: String) =
+//    cached(
+//      {_: RequestHeader => s"json/$q"},
+//      6.hours.toSeconds.asInstanceOf[Int]) {
+      Action { implicit req =>
+        implicit val data: SpencerData = mainC.getDB(dbname)
+        QueryParser.parseObjQuery(q) match {
+          case Right(qObj) =>
+            val objs = qObj.analyse.collect()
+            Ok(Json.obj(
+              "query"   -> q,
+              "objects" -> objs
+            ))
+          case Left(_) =>
+            NotAcceptable("could not parse the query '" + q)
+        }
 
-  def perobj(dbname: String, qs: String) = cached(
-    {_: RequestHeader => s"perobj/$qs"},
+      }
+//  }
+
+  def query(dbname: String, qs: String) = cached(
+    {_: RequestHeader => s"query/$qs"},
     6.hours.toSeconds.asInstanceOf[Int]) {
     Action { implicit req =>
       implicit val data: SpencerData = mainC.getDB(dbname)
       //
-      val queries = qs.split("/").map(QueryParser.parseObjQuery(_))
+      val eitherQueries = qs.split("/").map(QueryParser.parseObjQuery(_))
 
-      if (queries.exists(_.isLeft)) {
-        NotAcceptable("could not parse the query '" + qs + "':\n" + queries.filter(_.isLeft).mkString(", "))
+      if (eitherQueries.exists(_.isLeft)) {
+        NotAcceptable("could not parse the query '" + qs + "':\n" + eitherQueries.filter(_.isLeft).mkString(", "))
       } else {
-        println("================================ " + qs + " -parsed-> " + queries.mkString(", "))
-        val results = queries.map {
-          case Right(qObj) =>
-            val objects = WithMetaInformation(qObj).analyse.collect().map(QueryDataItem.tupled).toList
-            QueryData(dbname, qObj.toString, objects)
-        }
-        val allObjs = Obj().analyse.collect.toSet
-        Ok(views.html.result(dbname, qs, "todo: remove", allObjs, results))
+        println("================================ " + qs + " -parsed-> " + eitherQueries.mkString(", "))
+        val queries = eitherQueries.map(_.right.get)
+        Ok(views.html.query(dbname, queries))
       }
     }
   }
