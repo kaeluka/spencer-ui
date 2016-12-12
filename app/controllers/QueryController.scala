@@ -51,7 +51,7 @@ class QueryController @Inject()(lifecycle: ApplicationLifecycle,
                 ).filter(_._2.isDefined)
               )
             ))
-          ))
+          )).withHeaders(("Cache-Control", "public, max-age=3600"))
         case Left(_) =>
           NotAcceptable("could not parse the query '" + q)
       }
@@ -71,7 +71,7 @@ class QueryController @Inject()(lifecycle: ApplicationLifecycle,
             Ok(Json.obj(
               "query"   -> q,
               "objects" -> objs
-            ))
+            )).withHeaders(("Cache-Control", "public, max-age=3600"))
           case Left(_) =>
             NotAcceptable("could not parse the query '" + q)
         }
