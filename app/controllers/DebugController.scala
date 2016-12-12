@@ -6,6 +6,7 @@ import java.util.function.Consumer
 import javax.inject._
 
 import akka.actor.ActorSystem
+import com.datastax.driver.core.TableMetadata
 import com.fasterxml.jackson.databind.JsonNode
 import com.github.kaeluka.spencer.tracefiles.SpencerDB
 import play.api.libs.ws.{WSClient, WSResponse}
@@ -39,5 +40,19 @@ class DebugController @Inject()(ws: WSClient, mainController: MainController)(im
     }).recover {
       case e => ServiceUnavailable(Html(e.toString))
     }
+  }
+
+  def clearCaches(dbname: String) = Action {
+    val db = mainController.getDB(dbname)
+    val tables = db.session.getCluster.getMetadata.getKeyspace(dbname).getTables
+    tables.forEach(new Consumer[TableMetadata] {
+      override def accept(t: TableMetadata): Unit = {
+        if (t.getName.startsWith("cache_")) {
+          db.session.execute(s"DROP TABLE ${t.getName}")
+        }
+      }
+    })
+    Ok("all caches cleared")
+
   }
 }

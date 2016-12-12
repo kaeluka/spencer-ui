@@ -1,22 +1,12 @@
 package controllers
 
-import java.util
 import javax.inject._
 
-import play.api._
-import play.api.mvc._
-import play.api.data._
-import play.api.data.Forms._
-import com.github.kaeluka.spencer.analysis._
-import com.github.kaeluka.spencer.tracefiles.SpencerDB
 import com.github.kaeluka.spencer.analysis.SpencerGraphImplicits._
-import org.apache.spark.graphx.VertexId
-import org.apache.spark.rdd.RDD
-import play.api.data.Form
+import com.github.kaeluka.spencer.analysis._
 import play.api.i18n.MessagesApi
 import play.api.inject.ApplicationLifecycle
-
-import scala.concurrent.Future
+import play.api.mvc._
 
 object AproposControllerUtil {
   def oidWithHint(dbname: String, oid: Long): String = {

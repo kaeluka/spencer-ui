@@ -3,10 +3,17 @@
 
 @main(queries.mkString(" / ")) {
 
+    <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 
     <style>
-    .resultMatrix rect.matched {
+    #resultMatrix rect.matched {
         fill: #C83737;
+    }
+
+    .submitFocusWrapper {
+        width: 15%;
+        margin: 1em auto;
     }
 
     rect.rest {
@@ -16,13 +23,15 @@
 
     <h1>Query</h1>
 
-    <div class="queriesVsListWrapper">
-        <ul class="queriesVsList">
-        @for((q, i) <- queries.zipWithIndex) {
-            <li id="queryLi-@i"><span class="query">@q</span> <i id="spinner-@i" class="fa fa-spinner fa-spin" aria-hidden="true"></i></li>
-        }
-        </ul>
-    </div>
+    <table class="queriesTable">
+    @for((q, i) <- queries.zipWithIndex) {
+        <tr>
+            <td><i id="spinner-@i" class="fa fa-spinner fa-spin" aria-hidden="true"></i></td>
+            <td><span class="query">@q</span> </td>
+            <td><div class="queryExplanation">Objects that @q.explanation().</div></td>
+        </tr>
+    }
+    </table>
 
     <script>
             var COMMAND = "query";
@@ -32,8 +41,16 @@
 
     <div class="result">
 
-        <svg class="resultMatrix"></svg>
-        <div class="log" width="500" height="200"></div>
+        <div class="submitFocusWrapper">
+            <a class="center" id="submitFocusLink" href="@routes.QueryController.query(dbname, queries.mkString("/"))">select focus objects <i class="fa fa-angle-right" aria-hidden="true"></i></a>
+        </div>
+        <svg id="resultMatrix"></svg>
+
+        <div id="dataSetsContainer"></div>
+
+        <div id="metaDataContainer">
+            <i class="fa fa-spinner fa-spin" aria-hidden="true"></i>
+        </div>
 
         <script>
                 var color = randomColor({count: @(queries.size), seed: 123});
@@ -49,27 +66,43 @@
                     req.send(null);
                 }
 
-                var dataBuffer = {
-                    data: {},
-                    arrived: []
-                };
+                var dataBuffer = {};
+                var metaDataBuffer = { received: false };
+
                 function requestAllData() {
+                    const allObjsSet = new Set(allObjs);
                     @for((q, i) <- queries.zipWithIndex) {
                     {
-                        dataBuffer.data["@q.toString"] = [];
+                        dataBuffer["@q.toString"] = [];
                         const req = new XMLHttpRequest();
                         req.open("GET", "@routes.QueryController.json_select(dbname, q.toString)");
                         req.onload = function (e) {
                             console.log({req});
                             const resp = JSON.parse(req.responseText);
-                            dataBuffer.data["@q.toString"] = resp.objects;
-                            dataBuffer.arrived.push("@q.toString");
-                            const spinner = document.getElementById("spinner-@i");
-                            spinner.parentNode.removeChild(spinner);
+                            dataBuffer["@q.toString"] = resp.objects.filter(o => allObjsSet.has(o));
+                            const spinner = document.getElementById("spinner-@i").parentNode.innerHTML = "<i class='fa fa-check' aria-hidden='true'></i>";
+                            draw();
+                        };
+                        req.addEventListener("error", (e) => {
+                            const spinner = document.getElementById("spinner-@i").parentNode.innerHTML = "<i class='fa fa-close' aria-hidden='true'></i>";
+                        });
+                        req.send(null);
+                    }
+                    }
+
+                    {
+                        const req = new XMLHttpRequest();
+                        if (QUERIES.length > 1) {
+                            req.open("GET", '@routes.QueryController.json_meta(dbname, queries.mkString("Or(", " ", ")"))');
+                        } else {
+                            req.open("GET", '@routes.QueryController.json_meta(dbname, queries(0).toString)');
+                        }
+                        req.onload = function (resp) {
+                            metaDataBuffer = JSON.parse(req.responseText);
+                            metaDataBuffer.received = true;
                             draw();
                         };
                         req.send(null);
-                    }
                     }
                     draw();
                 }
@@ -102,7 +135,7 @@
                             fail: undefined
                         };
 
-                        data[query].pass = dataBuffer.data[query];
+                        data[query].pass = dataBuffer[query];
 
                         let querySet = new Set(data[query].pass);
                         data[query].fail = allObjs.filter(o => ! querySet.has(o));
@@ -164,24 +197,157 @@
                     };
                 }
 
-                const boxSize = 100;
+                const boxSize = 150;
                 var includeMatchList = new Set([]);
                 var hideMatchList = new Set([]);
-
-
-                const N = @queries.size; //number of queries
-                const margin = {top: 0, bottom: 100, left: 200, right: 400};
-                const svg = d3.select("svg")
-                        .attr("width", (N)*boxSize+margin.left+margin.right)
-                        .attr("height", (N)*boxSize+margin.bottom+margin.top);
-                const grid = svg.append("g")
-                        .attr("transform", "translate("+margin.left+","+margin.top+")")
-                        .attr("width", +svg.attr("width")-margin.left-margin.right)
-                        .attr("height", +svg.attr("height")-margin.top-margin.bottom);
 
                 function draw() {
                     const data = getRawData(includeMatchList, hideMatchList);
 
+                    drawMatrix(data);
+                    drawTable(data);
+                    if (metaDataBuffer.received) {
+                        drawMetaData(data);
+                    }
+                }
+
+                function getBarData(data) {
+                    const barData = {
+                        variables: {
+                            categorical: [],
+                            ordinal: [],
+                            numerical: ['classPercent']
+                        }
+                    };
+                    for (const v in metaDataBuffer.variables) {
+                        if (metaDataBuffer.variables.hasOwnProperty(v)) {
+                            barData.variables[metaDataBuffer.variables[v]].push(v);
+                        }
+                    }
+
+                    /**
+                     * mappedBarData shall contain:
+                     * for each categorical variable,
+                     *   for each query,
+                     *     for each value of the variable,
+                     *       the number of objects that pass the query and have that value
+                     */
+                    for (const v of barData.variables['categorical']) {
+                        barData[v] = {};
+                        for (const q of QUERIES) {
+                            if(metaDataBuffer.variables.hasOwnProperty(v)) {
+                                barData[v][q] = {};
+                            }
+                        }
+                    }
+                    // for each variable, go through metaDataBuffer.objects
+                    // and
+                    for (const query of QUERIES) {
+                        const qSet = new Set(data.data[query].pass);
+                        for (const metaDataObject of metaDataBuffer.objects) {
+                            for (const variable of barData.variables['categorical']) {
+                                if (!barData[variable][query].hasOwnProperty(metaDataObject[variable])) {
+                                    barData[variable][query][metaDataObject[variable]] = 0;
+                                }
+                                if (qSet.has(metaDataObject.oid)) {
+//                                    if (metaDataObject.hasOwnProperty(variable)) {
+//                                        debugger;
+                                        barData[variable][query][metaDataObject[variable]] += 1;
+//                                    }
+                                }
+                            }
+                        }
+                    }
+                    return barData;
+                }
+
+                function drawMetaData(data) {
+                    console.log({metaDataBuffer});
+                    document.getElementById("metaDataContainer").innerHTML = '';
+
+
+//                    Plotly.newPlot(document.getElementById('metaDataContainer'), bardata, barlayout);
+
+                    const container = d3.select("#metaDataContainer");
+
+                    const barData = getBarData(data);
+                    console.log({barData});
+
+                    const categoricalDataDivs = container
+                            .selectAll("div#categoricalData")
+                            .data(QUERIES)
+                            .enter()
+                            .append("div")
+                            .attr("class", "categoricalData");
+                    categoricalDataDivs
+                            .append("h3")
+                            .text(d => d);
+
+                    const categoricalDataDivRows = categoricalDataDivs
+                            .append("table")
+                            .selectAll("tr")
+                            .data(function (query) {
+                                return barData.variables.categorical.map(function(variable) {
+                                    return {variable, query};
+                                });
+                            })
+                            .enter()
+                            .append("tr");
+
+                    categoricalDataDivRows
+                            .append("td")
+                            .append("div")
+                            .attr("class", "query")
+                            .text(x => x.variable);
+
+                    categoricalDataDivRows
+                            .append("td")
+                            .append("div")
+                            .attr("class", "code")
+                            .attr("width", "100px")
+                            .text(x => JSON.stringify(barData[x.variable][x.query]));
+                }
+
+                function drawTable(data) {
+                    document.getElementById("dataSetsContainer").innerHTML = '';
+                    const dataSetsContainer = d3.select("#dataSetsContainer");
+                    const newDivs = dataSetsContainer
+                            .selectAll("div")
+                            .data(QUERIES)
+                            .enter()
+                            .append("div");
+                    newDivs
+                            .append("h3")
+                            .text(d => d);
+
+                    newDivs
+                            .append("div")
+                            .html(function (q) {
+                                let d = data.data[q].pass;
+                                const NMAX = 100;
+                                if (d.length > NMAX) {
+                                    return d.slice(0, NMAX-1)
+                                                    .map(oid => "<span class='oid'>"+oid+"</span>")
+                                                    .join(", ")+" and "+(d.length - NMAX)+" more.."
+                                } else {
+                                    return d
+                                            .map(oid => "<span class='oid'>"+oid+"</span>")
+                                            .join(", ")
+                                }
+                            });
+                }
+
+                function drawMatrix(data) {
+                    const N = @queries.size; //number of queries
+                    const margin = {top: 0, bottom: 100, left: 200, right: 200};
+
+                    const svg = d3.select("#resultMatrix")
+                            .attr("width", (N)*boxSize+margin.left+margin.right)
+                            .attr("height", (N)*boxSize+margin.bottom+margin.top);
+                    const grid = svg.append("g")
+                            .attr("transform", "translate("+margin.left+","+margin.top+")")
+                            .attr("width", +svg.attr("width")-margin.left-margin.right)
+                            .attr("height", +svg.attr("height")-margin.top-margin.bottom);
                     grid.selectAll(".gridCell").remove();
 
                     var gridData = [];
@@ -223,15 +389,23 @@
                             .attr("height",    (d) => sz(d.size))
                             .attr("transform", (d) => "translate(0, "+(boxSize - 10 - sz(d.size))+")")
                             .attr("width", (d) => boxSize - 10 )
-                            .attr("class", (d) => "matched objectsRectX"+d.i+" objectsRectY"+d.j )
+                            .attr("class", function(d) {
+                                if (d.i === d.j) {
+                                    return "matched objectsRect"+d.i;
+                                } else {
+                                    return "matched";
+                                }
+                            })
                             //FIXME: use this handler :)
                             .on("click", (pass, i) => console.log({pass}) );
                     cells.append("text")
                             .attr("height",    boxSize - 10)
-                            .attr("transform", (d) => "translate(0, "+(boxSize - 10)+")")
+                            .attr("transform", function(d) {
+                                return "translate("+(boxSize / 2 - 5)+", "+Math.max(10, (boxSize - 13 - sz(d.size)))+")";
+                            })
+                            .attr("class", "percentage")
+                            .attr("text-anchor", "middle")
                             .text((d) => d.size+" - "+Math.round(100*d.size/data.totalFocused)+"%");
-//                            .attr("width", (d) => boxSize - 10 )
-//                            .attr("class", (d) => "matched objectsRectX"+d.i+" objectsRectY"+d.j )
 
                     // legend:
                     svg.selectAll("text.legendBottom")
@@ -246,7 +420,7 @@
                                     (margin.top + boxSize*N+margin.bottom/2)+") rotate(-10)" )
                             .text((d, i) => d)
                             .on("click",     clickHandler      )
-                            .on("mouseover", mouseOverHandlerX )
+                            .on("mouseover", mouseOverHandler )
                             .on("mouseout",  mouseOutHandler   );
 
                     svg.selectAll("text.legendLeft")
@@ -259,60 +433,62 @@
                             .attr("transform", (d, i) => "translate("+margin.left+","+(margin.top+i*boxSize+boxSize/2)+")" )
                             .text((d, i) => d)
                             .on("click",     clickHandler      )
-                            .on("mouseover", mouseOverHandlerY )
-                            .on("mouseout",  mouseOutHandler   );
-
-                    svg.selectAll("text.explanation")
-                            .data(data.queries)
-                            .enter()
-                            .append("text")
-                            .attr("transform", (d, i) => "translate("+(margin.left+N*boxSize)+","+(margin.top+i*boxSize+boxSize/2)+")")
-                            .attr("class", "explanation")
-                            .attr("text-anchor", "start")
-                            .attr("dy", "0.35em")
-                            .text((d,i) => data.explanations[i])
-                            .on("click",     clickHandler      )
-                            .on("mouseover", mouseOverHandlerY )
+                            .on("mouseover", mouseOverHandler )
                             .on("mouseout",  mouseOutHandler   );
 
                     // "loading" symbols:
                     cells.append("i")
-                            .attr("class", "fa fa-spinner")
-                            .attr
+                            .attr("class", "fa fa-spinner");
+
                 }
 
+
                 function clickHandler(d, i) {
-                    console.log("click "+i);
+                    console.log("click " + i);
                     if (includeMatchList.has(QUERIES[i])) {
                         includeMatchList.delete(QUERIES[i]);
                         hideMatchList.add(QUERIES[i]);
-                        $(".legend"+i).css("fill", "#d9d9d9");
+                        $(".legend" + i).css("fill", "#d9d9d9");
                     } else if (hideMatchList.has(QUERIES[i])) {
                         hideMatchList.delete(QUERIES[i]);
-                        $(".legend"+i).css("fill", "black");
+                        $(".legend" + i).css("fill", "black");
                     } else {
                         includeMatchList.add(QUERIES[i]);
-                        $(".legend"+i).css("fill", "#C83737");
+                        $(".legend" + i).css("fill", "#C83737");
                     }
+
+
+                    const queryConstraints = [];
+                    for (const inc of includeMatchList) {
+                        queryConstraints.push(inc);
+                    }
+                    for (const hide of hideMatchList) {
+                        queryConstraints.push("Not("+hide+")");
+                    }
+
+                    if(queryConstraints.lengt != 0) {
+                        let newQueries = QUERIES
+                                .filter(q => (! includeMatchList.has(q)) && (! hideMatchList.has(q)));
+                        function constrainQuery(q) {
+                            return "And(" + queryConstraints.join(" ") + " " + q + ")";
+                        }
+                        const baseURL = "/query/@dbname/";
+                        let newQueriesURL = baseURL+(newQueries.map(constrainQuery).join("/"));
+                        d3.select("#submitFocusLink").attr("href", newQueriesURL);
+                    }
+
                     draw();
                 }
 
-                function mouseOverHandlerX(d, i) {
+                function mouseOverHandler(d, i) {
                     $(".matched").css("fill", "C0C0C0");
-                    $(".objectsRectX"+i).css("fill", "#EE4343");
-                }
-
-                function mouseOverHandlerY(d, i) {
-                    $(".matched").css("fill", "C0C0C0");
-                    $(".objectsRectY"+i).css("fill", "#EE4343");
+                    $(".objectsRect"+i).css("fill", "#EE4343");
                 }
 
                 function mouseOutHandler(d, i) {
                     $(".matched").css("fill", "#C83737");
                 }
         </script>
-        <div class="dataSetsContainer">
-        </div>
 
     </div>
 
@@ -331,11 +507,11 @@
                 .enter()
                 .append("li")
                 .append("a")
-                .attr("href", function(d,i) {
+                .html(function(d,i) {
                     let regex = new RegExp("Obj\(\)");
-                    return allObjsSelection.replace(regex, d);
-                })
-                .text((d,i) => d+" (JSON)");
+                    let url = allObjsSelection.replace(regex, d);
+                    return "<a href='"+url+"' download>"+d+" (JSON)</a>";
+                });
         d3.select("#jsonLinks")
                 .append("li")
                 .append("a")

@@ -7,8 +7,8 @@ GET     /                                     controllers.MainController.index
 GET     /playground                           controllers.MainController.playground
 
 GET     /json/select/:dbname/:q               controllers.QueryController.json_select(dbname, q)
-GET     /json/meta/:dbname/:q                 controllers.QueryController.json_meta(dbname, q)
 GET     /json/meta/:dbname                    controllers.QueryController.json_meta(dbname, q = "Obj()")
+GET     /json/meta/:dbname/:q                 controllers.QueryController.json_meta(dbname, q)
 
 GET     /query/:dbname/*q                     controllers.QueryController.query(dbname, q)
 
@@ -25,6 +25,7 @@ GET     /apropos/:dbname/:oid                 controllers.AproposController.apro
 GET     /source/:dbname/:klass                controllers.SourceCodeController.query(dbname, klass)
 
 GET     /debug                                controllers.DebugController.debug
+GET     /debug/clearCaches/:dbname            controllers.DebugController.clearCaches(dbname)
 
 # An example controller showing how to use dependency injection
 GET     /count                                controllers.CountController.count

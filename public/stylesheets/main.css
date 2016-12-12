@@ -22,39 +22,15 @@ span.code {
     font-family: 'DejaVu Sans Mono', monospace;
 }
 
+.center {
+    margin-left: auto;
+    margin-right: auto;
+}
+
 .query {
     border-left: solid #c83737;
     border-right: solid #c83737;
     border-radius: 0.5em;
-}
-
-div.queriesVsListWrapper {
-    text-align: center;
-}
-
-ul.queriesVsList {
-    display: inline-flex;
-    padding: 0;
-}
-
-ul.queriesVsList li {
-    list-style: none;
-    padding: 1em;
-}
-
-div.query {
-    padding-left: 1.2em;
-    text-indent: -1em;
-}
-
-svg.resultMatrix {
-    display: block;
-    padding-top: 2em;
-    padding-bottom: 2em;
-    /*border: 1px solid;*/
-
-    margin-left: auto;
-    margin-right: auto;
 }
 
 table tr td {
@@ -73,6 +49,31 @@ table {
     margin-left: auto;
     margin-right: auto;
 }
+
+table.queriesTable {
+}
+
+table.queriesTable div.queryExplanation {
+    text-align: center;
+}
+
+div.query {
+    padding-left: 1.2em;
+    text-indent: -1em;
+}
+
+svg#resultMatrix {
+    display: block;
+    padding-top: 2em;
+    padding-bottom: 2em;
+    /*border: 1px solid;*/
+
+    margin-left: auto;
+    margin-right: auto;
+}
+
+
+
 
 .query a {
     /* the font chrome uses in the URL bar for OS X: */
@@ -139,6 +140,11 @@ div.text p {
     text-indent: 1em;
 }
 
+.gridCell > text.percentage {
+    font-style: italic;
+    font-weight: bold;
+}
+
 .code {
     font-family: 'DejaVu Sans Mono', monospace;
 }
@@ -171,12 +177,11 @@ div.text p {
     color: #1c94c4;
 }
 
-div.dataSetsContainer {
+div#dataSetsContainer {
     display: flex;
 }
 
-div.dataSetsContainer div {
-    fill: red;
+div#dataSetsContainer table {
     -moz-box-shadow: 0 0 30px 5px #999;
     -webkit-box-shadow: 0 0 30px 5px #999;
 }
