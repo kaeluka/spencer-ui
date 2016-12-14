@@ -42,21 +42,23 @@ class PerClassController @Inject()(lifecycle: ApplicationLifecycle,
     {_: RequestHeader => s"perclass/$q"},
     6.hours.toSeconds.asInstanceOf[Int]) {
     Action { implicit req =>
-      implicit val data: SpencerData = mainC.getDB(dbname)
+      implicit val data = mainC.getDB(dbname)
       val qs: Array[String] = q.split("/")
 
       val queries = qs.map(QueryParser.parseObjQuery(_))
       if (queries.exists(_.isLeft)) {
         NotAcceptable("could not parse the query '" + q + "':\n" + queries.filter(_.isLeft).mkString(", "))
       } else {
-        val results = queries.map { case Right(query) => (query.toString, ProportionPerClass(query)
-          .analyse.collect
-          .map { case (oKlass, (succ, total)) => PerClassDataItem(oKlass, succ, total) }
-          .toSeq
-          .sortBy(item => item.total.toFloat / item.succ)
-          )
-        }.toSeq
-        Ok(views.html.perclass(dbname, query = q, results.map({ case (q, result) => PerClassData(dbname, q, result) })))
+//        val results = queries.map { case Right(query) => (query.toString, ProportionPerClass(query)
+//          .analyse.collect
+//          .map { case (oKlass, (succ, total)) => PerClassDataItem(oKlass, succ, total) }
+//          .toSeq
+//          .sortBy(item => item.total.toFloat / item.succ)
+//          )
+//        }.toSeq
+        val results = List()
+        NotAcceptable("no longer implemented")
+//        Ok(views.html.perclass(dbname, query = q, results.map({ case (q, result) => PerClassData(dbname, q, result) })))
       }
     }
 

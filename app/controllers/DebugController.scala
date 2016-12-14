@@ -8,7 +8,7 @@ import javax.inject._
 import akka.actor.ActorSystem
 import com.datastax.driver.core.TableMetadata
 import com.fasterxml.jackson.databind.JsonNode
-import com.github.kaeluka.spencer.tracefiles.SpencerDB
+import com.github.kaeluka.spencer.analysis.SpencerDB
 import play.api.libs.ws.{WSClient, WSResponse}
 import play.api.mvc._
 import play.libs.Json
@@ -44,14 +44,15 @@ class DebugController @Inject()(ws: WSClient, mainController: MainController)(im
 
   def clearCaches(dbname: String) = Action {
     val db = mainController.getDB(dbname)
-    val tables = db.session.getCluster.getMetadata.getKeyspace(dbname).getTables
-    tables.forEach(new Consumer[TableMetadata] {
-      override def accept(t: TableMetadata): Unit = {
-        if (t.getName.startsWith("cache_")) {
-          db.session.execute(s"DROP TABLE ${t.getName}")
-        }
-      }
-    })
+    db.clearCaches(Some(dbname))
+//    val tables = db.session.getCluster.getMetadata.getKeyspace(dbname).getTables
+//    tables.forEach(new Consumer[TableMetadata] {
+//      override def accept(t: TableMetadata): Unit = {
+//        if (t.getName.startsWith("cache_")) {
+//          db.session.execute(s"DROP TABLE ${t.getName}")
+//        }
+//      }
+//    })
     Ok("all caches cleared")
 
   }

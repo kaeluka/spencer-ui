@@ -18,7 +18,7 @@ object AproposControllerUtil {
 class AproposController @Inject()(lifecycle: ApplicationLifecycle, messagesApi : MessagesApi, mainC: MainController) extends Controller {
 
   def apropos(dbname: String, idStr: String) = Action { implicit req =>
-    implicit val data: SpencerData = mainC.getDB(dbname)
+    implicit val data = mainC.getDB(dbname)
 
     val apropos = Apropos(idStr.toLong).analyse
 

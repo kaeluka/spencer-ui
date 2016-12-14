@@ -45,7 +45,7 @@ class PerAllocationSiteController @Inject()(lifecycle: ApplicationLifecycle,
     {_:RequestHeader => s"perallocationsite/$qs"},
     6.hours.toSeconds.asInstanceOf[Int]) {
     Action { implicit req =>
-      implicit val data: SpencerData = mainC.getDB(dbname)
+      implicit val data = mainC.getDB(dbname)
 
       val queries = qs.split("/").map(QueryParser.parseObjQuery(_))
       println("================================ " + qs + " -parsed-> " + queries.mkString(" / "))
@@ -54,15 +54,16 @@ class PerAllocationSiteController @Inject()(lifecycle: ApplicationLifecycle,
       } else {
         val results = queries.map({
           case Right(query) =>
-            PerAllocationSiteData(query.toString, ProportionPerAllocationSite(query)
-              .analyse
-              .collect
-              .toSeq
-              .sortBy({ case (_, (x, n)) => n / x.toFloat })
-              .map({ case ((oFile, oLine), (x, y)) =>
-                PerAllocationSiteDataItem(oFile.flatMap(file => oLine.map(line => file + ":" + line)), x, y)
-              })
-            )
+            PerAllocationSiteData(query.toString, List())
+//            PerAllocationSiteData(query.toString, ProportionPerAllocationSite(query)
+//              .analyse
+//              .collect
+//              .toSeq
+//              .sortBy({ case (_, (x, n)) => n / x.toFloat })
+//              .map({ case ((oFile, oLine), (x, y)) =>
+//                PerAllocationSiteDataItem(oFile.flatMap(file => oLine.map(line => file + ":" + line)), x, y)
+//              })
+//            )
         })
         Ok(views.html.perallocationsite(dbname, qs, results))
 

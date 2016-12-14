@@ -29,7 +29,8 @@ class QueryController @Inject()(lifecycle: ApplicationLifecycle,
 //    6.hours.toSeconds.asInstanceOf[Int])
     {
     Action { implicit req =>
-      implicit val data: SpencerData = mainC.getDB(dbname)
+      implicit val data = mainC.getDB(dbname)
+      val cacheDuration = if (dbname == "test") 0 else 3600
       QueryParser.parseObjQuery(q) match {
         case Right(qObj) =>
           val metaQuery: WithMetaInformation = WithMetaInformation(qObj)
@@ -51,7 +52,7 @@ class QueryController @Inject()(lifecycle: ApplicationLifecycle,
                 ).filter(_._2.isDefined)
               )
             ))
-          )).withHeaders(("Cache-Control", "public, max-age=3600"))
+          )).withHeaders(("Cache-Control", s"public, max-age=$cacheDuration"))
         case Left(_) =>
           NotAcceptable("could not parse the query '" + q)
       }
@@ -63,15 +64,21 @@ class QueryController @Inject()(lifecycle: ApplicationLifecycle,
 //      {_: RequestHeader => s"json/$q"},
 //      6.hours.toSeconds.asInstanceOf[Int])
     {
+      val cacheDuration = if (dbname == "test") 0 else 3600
       Action { implicit req =>
-        implicit val data: SpencerData = mainC.getDB(dbname)
+        implicit val data = mainC.getDB(dbname)
+        println(s"db is: $dbname")
+        println(s"db is: $data")
+        import data.sqlContext.implicits._
         QueryParser.parseObjQuery(q) match {
           case Right(qObj) =>
-            val objs = qObj.analyse.collect()
+            println(s"qObj = $qObj")
+            val objs = qObj.analyse
+            assert(objs != null, "need objs")
             Ok(Json.obj(
               "query"   -> q,
-              "objects" -> objs
-            )).withHeaders(("Cache-Control", "public, max-age=3600"))
+              "objects" -> objs.select("id").as[Long].collect()
+            )).withHeaders((s"Cache-Control", "public, max-age=$cacheDuration"))
           case Left(_) =>
             NotAcceptable("could not parse the query '" + q)
         }
@@ -86,7 +93,6 @@ class QueryController @Inject()(lifecycle: ApplicationLifecycle,
     {
       Action { implicit req =>
         val qs = qs_.replace("%20", " ")
-        implicit val data: SpencerData = mainC.getDB(dbname)
         val eitherQueries = qs.split("/").map(QueryParser.parseObjQuery(_))
 
         if (eitherQueries.exists(_.isLeft)) {

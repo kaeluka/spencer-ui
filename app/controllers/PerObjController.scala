@@ -1,25 +1,15 @@
 package controllers
 
-import java.util
 import javax.inject._
 
-import scala.concurrent.duration._
-
-import play.api._
-import play.api.mvc._
-import play.api.data._
-import play.api.data.Forms._
 import com.github.kaeluka.spencer.analysis._
-import com.github.kaeluka.spencer.tracefiles.SpencerDB
-import com.github.kaeluka.spencer.analysis.SpencerGraphImplicits._
 import org.apache.spark.graphx.VertexId
-import org.apache.spark.rdd.RDD
 import play.api.cache.Cached
-import play.api.data.Form
 import play.api.i18n.MessagesApi
 import play.api.inject.ApplicationLifecycle
+import play.api.mvc._
 
-import scala.concurrent.Future
+import scala.concurrent.duration._
 
 case class PerObjDataItem(oid: VertexId, klass: Option[String], allocationSite: Option[String])
 case class PerObjData(dbname: String, query: String, data: Seq[PerObjDataItem])
@@ -61,7 +51,8 @@ class PerObjController @Inject()(lifecycle: ApplicationLifecycle,
     {_: RequestHeader => s"perobj/$qs"},
     6.hours.toSeconds.asInstanceOf[Int]) {
     Action { implicit req =>
-      implicit val data: SpencerData = mainC.getDB(dbname)
+      /*
+      implicit val data = mainC.getDB(dbname)
       //
       val queries = qs.split("/").map(QueryParser.parseObjQuery(_))
 
@@ -77,8 +68,10 @@ class PerObjController @Inject()(lifecycle: ApplicationLifecycle,
             PerObjData(dbname, qObj.toString, objects)
         }
         val allObjs = Obj().analyse.collect.toSet
-        Ok(views.html.result(dbname, qs, "todo: remove", allObjs, results))
+        Ok(views.html.result(dbname, qs, "todo: remove", allObjs.select("id").as[Long].rdd, results))
       }
+      */
+      NotAcceptable("no longer implemented")
     }
   }
 }

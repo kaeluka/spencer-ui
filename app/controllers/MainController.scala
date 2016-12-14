@@ -1,20 +1,13 @@
 package controllers
 
-import java.util
 import javax.inject._
 
-import com.github.kaeluka.spencer.analysis.SpencerGraphImplicits._
-import com.github.kaeluka.spencer.analysis._
-import com.github.kaeluka.spencer.tracefiles.SpencerDB
-import org.apache.spark.graphx.VertexId
-import org.apache.spark.rdd.RDD
-import play.api.cache.{CacheApi, Cached}
-import play.api.data.Forms._
-import play.api.data.{Form, _}
+import com.github.kaeluka.spencer.PostgresSpencerDB
+import com.github.kaeluka.spencer.analysis.SpencerDB
+import play.api.cache.Cached
 import play.api.i18n.MessagesApi
 import play.api.inject.ApplicationLifecycle
 import play.api.mvc._
-import play.twirl.api.Html
 
 import scala.concurrent.Future
 
@@ -31,10 +24,13 @@ class MainController @Inject()(lifecycle: ApplicationLifecycle,
 
   def getDB(name: String): SpencerDB = {
     if (! this.dbMap.contains(name)) {
-      val db: SpencerDB = new SpencerDB(name)
+      println(s"creating DB for $name")
+      val db: PostgresSpencerDB= new PostgresSpencerDB(name)
+      println(s"connecting to DB for $name")
       db.connect()
+      println(s"connected to DB for $name")
       this.dbMap = this.dbMap + (name -> db)
-      this.lifecycle.addStopHook { () => Future.successful(db.shutdown()) }
+      //this.lifecycle.addStopHook { () => Future.successful(db.shutdown()) }
     }
     this.dbMap(name)
   }

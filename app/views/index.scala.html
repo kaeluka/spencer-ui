@@ -1,5 +1,6 @@
 @import com.github.kaeluka.spencer.analysis.QueryParser
-@import com.github.kaeluka.spencer.tracefiles.SpencerDB
+@import com.github.kaeluka.spencer.analysis.SpencerDB
+
 @()(implicit db: SpencerDB)
 @*
  * Call the `main` template with two arguments. The first
@@ -180,17 +181,17 @@
                 </tr>
             </thead>
             <tbody>
-                @for(rec <- (db.getTable("objects").filter(_.getLong("id") < -500).take(1) ++ db.getTable("objects").filter(_.getLong("id") > 1500).take(15)).sortBy(_.getLong("firstusage"))) {
+                @for(rec <- (db.getFrame("objects").rdd.filter(_.getAs[Long]("id") < -500).take(1) ++ db.getFrame("objects").rdd.filter(_.getAs[Long]("id") > 1500).take(15)).sortBy(_.getAs[Long]("firstusage"))) {
                     <tr>
-                        <td><span class="oid">@rec.getLong("id")</span></td>
+                        <td><span class="oid">@rec.getAs[Long]("id")</span></td>
                         <td>
-                            @((rec.getStringOption("allocationsitefile"), rec.getLongOption("allocationsiteline")) match {
+                            @((Option(rec.getAs[String]("allocationsitefile")), Option(rec.getAs[Long]("allocationsiteline"))) match {
                                 case (Some(f), Some(l)) => Html("<span class='sourceLocation allocationsite'>"+f+":"+l+"</span>")
                                 case _ => Html("<span class='empty'>none</span>")
                             })
                         </td>
-                        <td><span class="evtidx">@rec.getLong("firstusage")</span></td>
-                        <td><span class="evtidx">@rec.getLong("lastusage")</span></td>
+                        <td><span class="evtidx">@rec.getAs[Long]("firstusage")</span></td>
+                        <td><span class="evtidx">@rec.getAs[Long]("lastusage")</span></td>
                     </tr>
                 }
                 <tr>
@@ -245,22 +246,22 @@
                 </tr>
             </thead>
             <tbody>
-                @for(rec <- (db.getTable("refs").filter(row => row.getString("kind").equals("var"  ) && row.getLong("caller") > 1500).take(5) ++
-                             db.getTable("refs").filter(row => row.getString("kind").equals("field") && row.getLong("caller") > 1500).take(5)).sortBy(_.getLong("start"))) {
+                @for(rec <- (db.getFrame("refs").rdd.filter(row => row.getAs[String]("kind").equals("var"  ) && row.getAs[Long]("caller") > 1500).take(5) ++
+                             db.getFrame("refs").rdd.filter(row => row.getAs[String]("kind").equals("field") && row.getAs[Long]("caller") > 1500).take(5)).sortBy(_.getAs[Long]("refstart"))) {
                     <tr>
-                        <td><span class="oid">@rec.getLong("caller")</span></td>
+                        <td><span class="oid">@rec.getAs[Long]("caller")</span></td>
                         <td style="padding: 0 1em;"><emph>holds a </emph></td>
-                        <td><span class="code">@rec.getString("kind")</span></td>
+                        <td><span class="code">@rec.getAs[String]("kind")</span></td>
                         <td style="padding: 0 1em;"><emph>ref called</emph></td>
-                        <td><span class="code">@rec.getString("name")</span></td>
+                        <td><span class="code">@rec.getAs[String]("name")</span></td>
                         <td style="padding: 0 1em;"><emph>to</emph></td>
-                        <td><span class="oid">@rec.getLong("callee")</span></td>
+                        <td><span class="oid">@rec.getAs[Long]("callee")</span></td>
                         <td style="padding: 0 1em;"><i class="fa fa-clock-o"/></td>
-                        <td><span class="evtidx">@rec.getLong("start")</span></td>
+                        <td><span class="evtidx">@rec.getAs[Long]("refstart")</span></td>
                         <td style="padding: 0 1em;">&mdash;</td>
-                        <td>@Html(rec.getLongOption("end").map("<span class='evtidx'>"+_+"</span>").getOrElse("<span class='empty'>none</span>"))</td>
+                        <td>@Html(Option(rec.getAs[Long]("refend")).map("<span class='evtidx'>"+_+"</span>").getOrElse("<span class='empty'>none</span>"))</td>
                         <td style="padding: 0 1em;"><emph>established by</emph></td>
-                        <td><span class="threadName">@rec.getString("thread")</span></td>
+                        <td><span class="threadName">@rec.getAs[String]("thread")</span></td>
                     </tr>
                 }
                 <tr>
@@ -317,24 +318,24 @@
                 </tr>
             </thead>
             <tbody>
-                @for(rec <- (db.getTable("uses").filter(_.getLong("caller") > 1500).filter(row => "modify"    .equals(row.getString("kind"))).take(3) ++
-                             db.getTable("uses").filter(_.getLong("caller") > 1500).filter(row => "fieldstore".equals(row.getString("kind"))).take(2) ++
-                             db.getTable("uses").filter(_.getLong("caller") > 1500).filter(row => "fieldload".equals(row.getString("kind"))).take(2) ++
-                             db.getTable("uses").filter(_.getLong("caller") > 1500).filter(row => "varload".equals(row.getString("kind"))).take(5) ++
-                             db.getTable("uses").filter(_.getLong("caller") > 1500).filter(row => "varstore" .equals(row.getString("kind"))).take(2) ++
-                             db.getTable("uses").filter(_.getLong("caller") > 1500).filter(row => "read"      .equals(row.getString("kind"))).take(5)).sortBy(_.getLong("idx"))) {
+                @for(rec <- (db.getFrame("uses").rdd.filter(_.getAs[Long]("caller") > 1500).filter(row => "modify"    .equals(row.getAs[String]("kind"))).take(3) ++
+                             db.getFrame("uses").rdd.filter(_.getAs[Long]("caller") > 1500).filter(row => "fieldstore".equals(row.getAs[String]("kind"))).take(2) ++
+                             db.getFrame("uses").rdd.filter(_.getAs[Long]("caller") > 1500).filter(row => "fieldload".equals(row.getAs[String]("kind"))).take(2) ++
+                             db.getFrame("uses").rdd.filter(_.getAs[Long]("caller") > 1500).filter(row => "varload".equals(row.getAs[String]("kind"))).take(5) ++
+                             db.getFrame("uses").rdd.filter(_.getAs[Long]("caller") > 1500).filter(row => "varstore" .equals(row.getAs[String]("kind"))).take(2) ++
+                             db.getFrame("uses").rdd.filter(_.getAs[Long]("caller") > 1500).filter(row => "read"      .equals(row.getAs[String]("kind"))).take(5)).sortBy(_.getAs[Long]("idx"))) {
                     <tr>
-                        <td><span class="oid">@rec.getLong("caller")</span></td>
+                        <td><span class="oid">@rec.getAs[Long]("caller")</span></td>
                         <td style="padding: 0 1em;"><emph>executes</emph></td>
-                        <td><span class="code useKind">@rec.getString("kind")</span></td>
+                        <td><span class="code useKind">@rec.getAs[String]("kind")</span></td>
                         <td style="padding: 0 1em;"><emph>of field</emph></td>
-                        <td><span class="code">@rec.getString("name")</span></td>
+                        <td><span class="code">@rec.getAs[String]("name")</span></td>
                         <td style="padding: 0 1em;"><emph>of</emph></td>
-                        <td><span class="oid">@rec.getLong("callee")</span></td>
+                        <td><span class="oid">@rec.getAs[Long]("callee")</span></td>
                         <td style="padding: 0 1em;"><i class="fa fa-clock-o"/></td>
-                        <td><span class="evtidx">@rec.getLong("idx")</span></td>
+                        <td><span class="evtidx">@rec.getAs[Long]("idx")</span></td>
                         <td style="padding: 0 1em;"><emph>in</emph></td>
-                        <td><span class="threadName">@rec.getString("thread")</span></td>
+                        <td><span class="threadName">@rec.getAs[String]("thread")</span></td>
                     </tr>
                 }
                 <tr>
@@ -390,21 +391,21 @@
                 </tr>
             </thead>
             <tbody>
-                @for(rec <- db.getTable("calls").filter(_.getLong("caller") > 1500).filter(row => row.getString("thread").equals("main")).take(10).sortBy(row => (row.getLong("start"), row.getLong("end")))) {
+                @for(rec <- db.getFrame("calls").rdd.filter(_.getAs[Long]("caller") > 1500).filter(row => row.getAs[String]("thread").equals("main")).take(10).sortBy(row => (row.getAs[Long]("callstart"), row.getAs[Long]("callend")))) {
                     <tr>
-                        <td><span class="oid">@rec.getLong("callee")</span></td>
+                        <td><span class="oid">@rec.getAs[Long]("callee")</span></td>
                         <td style="padding: 0 1em;"><emph>calls</emph></td>
-                        <td><span class="code useKind">@rec.getString("name")</span></td>
+                        <td><span class="code useKind">@rec.getAs[String]("name")</span></td>
                         <td style="padding: 0 1em;"><emph>on</emph></td>
-                        <td><span class="oid">@rec.getString("callee")</span></td>
+                        <td><span class="oid">@rec.getAs[Long]("callee")</span></td>
                         <td style="padding: 0 1em;"><emph>at</emph></td>
-                        <td><span class="sourceLocation">@rec.getStringOption("callsitefile"):@rec.getLongOption("callsiteline")</span></td>
+                        <td><span class="sourceLocation">@Option(rec.getAs[String]("callsitefile")):@Option(rec.getAs[Long]("callsiteline"))</span></td>
                         <td style="padding: 0 1em;"><i class="fa fa-clock-o" aria-hidden="true"/></td>
-                        <td><span class="evtidx">@rec.getLong("start")</span></td>
+                        <td><span class="evtidx">@rec.getAs[Long]("callstart")</span></td>
                         <td style="padding: 0 1em;">&mdash;</td>
-                        <td><span class="evtidx">@rec.getLong("end")</span></td>
+                        <td><span class="evtidx">@rec.getAs[Long]("callend")</span></td>
                         <td style="padding: 0 1em;">in</td>
-                        <td><span class="threadName">@rec.getString("thread")</span></td>
+                        <td><span class="threadName">@rec.getAs[String]("thread")</span></td>
                     </tr>
                 }
                 <tr>

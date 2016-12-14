@@ -37,7 +37,7 @@ class TimingController @Inject()(lifecycle: ApplicationLifecycle,
   def query(dbname: String, q: String) =
     cached({_:RequestHeader => s"timing/$q"}, 6.hours.toSeconds.asInstanceOf[Int]) {
       Action { implicit req =>
-        implicit val data: SpencerData = mainC.getDB(dbname)
+        implicit val data = mainC.getDB(dbname)
 
         val query: Either[String, VertexIdAnalyser] = QueryParser.parseObjQuery(q)
         println("================================ " + q + " -parsed-> " + query.toString)
