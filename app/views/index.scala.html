@@ -1,5 +1,6 @@
 @import com.github.kaeluka.spencer.analysis.QueryParser
 @import com.github.kaeluka.spencer.analysis.SpencerDB
+@import org.apache.spark.sql.functions._
 
 @()(implicit db: SpencerDB)
 @*
@@ -185,7 +186,7 @@
                     <tr>
                         <td><span class="oid">@rec.getAs[Long]("id")</span></td>
                         <td>
-                            @((Option(rec.getAs[String]("allocationsitefile")), Option(rec.getAs[Long]("allocationsiteline"))) match {
+                            @((Option(rec.getAs[String]("allocationsitefile")), Option(rec.getAs[Int]("allocationsiteline"))) match {
                                 case (Some(f), Some(l)) => Html("<span class='sourceLocation allocationsite'>"+f+":"+l+"</span>")
                                 case _ => Html("<span class='empty'>none</span>")
                             })
@@ -318,12 +319,12 @@
                 </tr>
             </thead>
             <tbody>
-                @for(rec <- (db.getFrame("uses").rdd.filter(_.getAs[Long]("caller") > 1500).filter(row => "modify"    .equals(row.getAs[String]("kind"))).take(3) ++
-                             db.getFrame("uses").rdd.filter(_.getAs[Long]("caller") > 1500).filter(row => "fieldstore".equals(row.getAs[String]("kind"))).take(2) ++
-                             db.getFrame("uses").rdd.filter(_.getAs[Long]("caller") > 1500).filter(row => "fieldload".equals(row.getAs[String]("kind"))).take(2) ++
-                             db.getFrame("uses").rdd.filter(_.getAs[Long]("caller") > 1500).filter(row => "varload".equals(row.getAs[String]("kind"))).take(5) ++
-                             db.getFrame("uses").rdd.filter(_.getAs[Long]("caller") > 1500).filter(row => "varstore" .equals(row.getAs[String]("kind"))).take(2) ++
-                             db.getFrame("uses").rdd.filter(_.getAs[Long]("caller") > 1500).filter(row => "read"      .equals(row.getAs[String]("kind"))).take(5)).sortBy(_.getAs[Long]("idx"))) {
+                @for(rec <- (db.selectFrame("uses", "SELECT * FROM uses WHERE kind = 'modify'     AND caller > 1500 LIMIT 3") union
+                             db.selectFrame("uses", "SELECT * FROM uses WHERE kind = 'fieldstore' AND caller > 1500 LIMIT 2") union
+                             db.selectFrame("uses", "SELECT * FROM uses WHERE kind = 'fieldload'  AND caller > 1500 LIMIT 2") union
+                             db.selectFrame("uses", "SELECT * FROM uses WHERE kind = 'varload'    AND caller > 1500 LIMIT 5") union
+                             db.selectFrame("uses", "SELECT * FROM uses WHERE kind = 'varstore'   AND caller > 1500 LIMIT 2") union
+                             db.selectFrame("uses", "SELECT * FROM uses WHERE kind = 'read'       AND caller > 1500 LIMIT 5")).sort(desc("idx")).collect) {
                     <tr>
                         <td><span class="oid">@rec.getAs[Long]("caller")</span></td>
                         <td style="padding: 0 1em;"><emph>executes</emph></td>
@@ -391,7 +392,7 @@
                 </tr>
             </thead>
             <tbody>
-                @for(rec <- db.getFrame("calls").rdd.filter(_.getAs[Long]("caller") > 1500).filter(row => row.getAs[String]("thread").equals("main")).take(10).sortBy(row => (row.getAs[Long]("callstart"), row.getAs[Long]("callend")))) {
+                @for(rec <- db.selectFrame("calls", "SELECT * FROM calls WHERE thread = 'main' AND caller > 1500 ORDER BY callstart, callend LIMIT 10").collect()) {
                     <tr>
                         <td><span class="oid">@rec.getAs[Long]("callee")</span></td>
                         <td style="padding: 0 1em;"><emph>calls</emph></td>
