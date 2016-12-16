@@ -54,6 +54,9 @@
 
         <script>
                 var color = randomColor({count: @(queries.size), seed: 123});
+                var havePlot = {};
+
+                var barLayouts = {};
 
                 var allObjs = [];
                 {
@@ -105,6 +108,103 @@
                         req.send(null);
                     }
                     draw();
+                }
+
+                /**
+                 * returns the query, accounting for the focus set -- as if the
+                 * focus had been chosen. Use this for labeling data
+                 */
+                function projectFocusedQuery(query) {
+                    const queryConstraints = [];
+                    for (const inc of includeMatchList) {
+                        queryConstraints.push(inc);
+                    }
+
+                    for (const hide of hideMatchList) {
+                        queryConstraints.push("Not("+hide+")");
+                    }
+
+                    if (queryConstraints.length > 0) {
+                        return "And(" + queryConstraints.join(" ") + " " + query + ")";
+                    } else {
+                        return query;
+                    }
+                }
+
+                function drawVariableBarChart(allData, variable) {
+                    let maxY = - Infinity;
+                    const bardata = [];
+                    for (const query in allData[variable]) {
+                        if (allData[variable].hasOwnProperty(query)) {
+                            const dataset = allData[variable][query];
+                            const xs = [];
+                            const ys = [];
+                            for (const x in dataset) {
+                                if (dataset.hasOwnProperty(x)) {
+                                    xs.push(x);
+                                    let y = dataset[x];
+                                    ys.push(dataset[x]);
+                                    if (y > maxY) {
+                                        maxY = y;
+                                    }
+                                }
+                            }
+                            bardata.push({
+                                x: xs,
+                                y: ys,
+                                type: 'bar',
+                                mode: 'lines',
+                                hoverinfo: 'y',
+                                name: projectFocusedQuery(query),
+//                                opacity: 0.08,
+//                                marker: {
+//                                    color: 'red',
+//                                    line: {
+//                                        color: 'black',
+//                                        width: 2
+//                                    }
+//                                }
+                            });
+
+
+                        }
+                    }
+
+                    debugger;
+                    if (! barLayouts.hasOwnProperty(variable)) {
+                        barLayouts[variable] = {
+//                            barmode: 'stack',
+                            autosize: false,
+                            font: {
+                                size: 20
+                            },
+                            height: 800,
+                            width: Math.min(10000, bardata[bardata.length-1].y.length*30 + 500),
+                            yaxis: { range : [0, maxY*1.05]}
+                        };
+
+                        if (variable === 'klass' || variable === 'allocationSite') {
+                            //todo
+                            barLayouts[variable].margin = {
+                                l: 200,
+                                b: 600
+                            };
+                            barLayouts[variable].height += barLayouts[variable].margin.b;
+                            barLayouts[variable].width += barLayouts[variable].margin.l;
+                        }
+                    }
+                    const barlayout = barLayouts[variable];
+                    const chartId = "barchart-"+variable;
+
+                    const chart = document.getElementById(chartId);
+                    if (havePlot.hasOwnProperty('variable') && havePlot[variable] == true) {
+                        chart.data = bardata;
+
+                        Plotly.redraw(chart)
+                    } else {
+                        Plotly.newPlot(chart, bardata, barlayout);
+                        havePlot[variable] = true;
+                    }
                 }
 
                 /**
@@ -197,7 +297,8 @@
                     };
                 }
 
-                const boxSize = 150;
+                const boxSize = 100;
+                const boxMargin = 10;
                 var includeMatchList = new Set([]);
                 var hideMatchList = new Set([]);
 
@@ -205,7 +306,7 @@
                     const data = getRawData(includeMatchList, hideMatchList);
 
                     drawMatrix(data);
-                    drawTable(data);
+//                    drawTable(data);
                     if (metaDataBuffer.received) {
                         drawMetaData(data);
                     }
@@ -273,39 +374,59 @@
                     const barData = getBarData(data);
                     console.log({barData});
 
-                    const categoricalDataDivs = container
-                            .selectAll("div#categoricalData")
-                            .data(QUERIES)
+//                    const categoricalDataDivs = container
+//                            .selectAll("div#categoricalData")
+//                            .data(QUERIES)
+//                            .enter()
+//                            .append("div")
+//                            .attr("class", "categoricalData");
+//                    categoricalDataDivs
+//                            .append("h3")
+//                            .text(d => d);
+
+//                    const categoricalDataDivRows = categoricalDataDivs
+//                            .append("table")
+//                            .selectAll("tr")
+//                            .data(function (query) {
+//                                return barData.variables.categorical.map(function(variable) {
+//                                    return {variable, query};
+//                                });
+//                            })
+//                            .enter()
+//                            .append("tr");
+
+//                    categoricalDataDivRows
+//                            .append("td")
+//                            .append("div")
+//                            .attr("class", "query")
+//                            .text(x => x.variable);
+
+//                    categoricalDataDivRows
+//                            .append("td")
+//                            .append("div")
+//                            .attr("class", "code" )
+//                            .attr("width", "400px")
+//                            .attr("height", "200px")
+//                            .attr("id", x => "barchart-"+x.query+"-"+x.variable)
+//                            .text(x => JSON.stringify(barData[x.variable][x.query]));
+
+                    container
+                            .append("div")
+                            .attr("class", "perVariableMetaInfo")
+                            .selectAll("div")
+                            .data(barData.variables['categorical'])
                             .enter()
                             .append("div")
-                            .attr("class", "categoricalData");
-                    categoricalDataDivs
-                            .append("h3")
-                            .text(d => d);
-
-                    const categoricalDataDivRows = categoricalDataDivs
-                            .append("table")
-                            .selectAll("tr")
-                            .data(function (query) {
-                                return barData.variables.categorical.map(function(variable) {
-                                    return {variable, query};
-                                });
-                            })
-                            .enter()
-                            .append("tr");
-
-                    categoricalDataDivRows
-                            .append("td")
-                            .append("div")
-                            .attr("class", "query")
-                            .text(x => x.variable);
-
-                    categoricalDataDivRows
-                            .append("td")
-                            .append("div")
+                            .append("h2")
+                            .text(v => v)
                             .attr("class", "code")
-                            .attr("width", "100px")
-                            .text(x => JSON.stringify(barData[x.variable][x.query]));
+                            .append("div")
+                            .attr("style", "border: 1px solid;")
+                            .attr("id", v => "barchart-"+v);
+
+                    for (const v of barData.variables['categorical']) {
+                        drawVariableBarChart(barData, v);
+                    }
                 }
 
                 function drawTable(data) {
@@ -366,7 +487,7 @@
 
                     const sz = d3.scaleLinear()
                             .domain([0, maxSize])
-                            .range([0, boxSize - 10]);
+                            .range([0, boxSize - boxMargin]);
 
                     var cells = grid.selectAll("g")
                             .data(gridData)
@@ -380,15 +501,15 @@
 
                     cells.append("rect")
                             .attr("class", "rest")
-                            .attr("width",  boxSize - 10)
-                            .attr("height", boxSize - 10)
+                            .attr("width",  boxSize - boxMargin)
+                            .attr("height", boxSize - boxMargin)
                             //FIXME: use this handler :)
                             .on("click", (fail, i) => console.log({fail}));
 
                     cells.append("rect")
                             .attr("height",    (d) => sz(d.size))
-                            .attr("transform", (d) => "translate(0, "+(boxSize - 10 - sz(d.size))+")")
-                            .attr("width", (d) => boxSize - 10 )
+                            .attr("transform", (d) => "translate(0, "+(boxSize - boxMargin - sz(d.size))+")")
+                            .attr("width", (d) => boxSize - boxMargin )
                             .attr("class", function(d) {
                                 if (d.i === d.j) {
                                     return "matched objectsRect"+d.i;
@@ -399,13 +520,14 @@
                             //FIXME: use this handler :)
                             .on("click", (pass, i) => console.log({pass}) );
                     cells.append("text")
-                            .attr("height",    boxSize - 10)
+                            .attr("height",    boxSize - boxMargin)
                             .attr("transform", function(d) {
                                 return "translate("+(boxSize / 2 - 5)+", "+Math.max(10, (boxSize - 13 - sz(d.size)))+")";
                             })
                             .attr("class", "percentage")
                             .attr("text-anchor", "middle")
-                            .text((d) => d.size+" - "+Math.round(100*d.size/data.totalFocused)+"%");
+//                            .text((d) => d.size+" - "+Math.round(100*d.size/data.totalFocused)+"%");
+                            .text((d) => Math.round(100*d.size/data.totalFocused)+"%");
 
                     // legend:
                     svg.selectAll("text.legendBottom")
@@ -466,7 +588,7 @@
                         queryConstraints.push("Not("+hide+")");
                     }
 
-                    if(queryConstraints.lengt != 0) {
+                    if(queryConstraints.length != 0) {
                         let newQueries = QUERIES
                                 .filter(q => (! includeMatchList.has(q)) && (! hideMatchList.has(q)));
                         function constrainQuery(q) {
