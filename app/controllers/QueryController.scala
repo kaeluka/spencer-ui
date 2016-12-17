@@ -52,7 +52,7 @@ class QueryController @Inject()(lifecycle: ApplicationLifecycle,
                 ).filter(_._2.isDefined)
               )
             ))
-          )).withHeaders(("Cache-Control", s"public, max-age=$cacheDuration"))
+          )).withHeaders((s"Cache-Control", s"public, max-age=$cacheDuration"))
         case Left(_) =>
           NotAcceptable("could not parse the query '" + q)
       }
@@ -78,13 +78,12 @@ class QueryController @Inject()(lifecycle: ApplicationLifecycle,
             Ok(Json.obj(
               "query"   -> q,
               "objects" -> objs.select("id").as[Long].collect()
-            )).withHeaders((s"Cache-Control", "public, max-age=$cacheDuration"))
+            )).withHeaders((s"Cache-Control", s"public, max-age=$cacheDuration"))
           case Left(_) =>
             NotAcceptable("could not parse the query '" + q)
         }
-
       }
-  }
+    }
 
   def query(dbname: String, qs_ : String) =
 //    cached(
