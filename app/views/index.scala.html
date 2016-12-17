@@ -247,8 +247,8 @@
                 </tr>
             </thead>
             <tbody>
-                @for(rec <- (db.getFrame("refs").rdd.filter(row => row.getAs[String]("kind").equals("var"  ) && row.getAs[Long]("caller") > 1500).take(5) ++
-                             db.getFrame("refs").rdd.filter(row => row.getAs[String]("kind").equals("field") && row.getAs[Long]("caller") > 1500).take(5)).sortBy(_.getAs[Long]("refstart"))) {
+                @for(rec <- (db.selectFrame("refs", "SELECT * FROM refs WHERE kind = 'var' AND caller > 1500 LIMIT 5") union
+                             db.selectFrame("refs", "SELECT * FROM refs WHERE kind = 'field' AND caller > 1500 LIMIT 2")).sort(desc("refstart")).collect()) {
                     <tr>
                         <td><span class="oid">@rec.getAs[Long]("caller")</span></td>
                         <td style="padding: 0 1em;"><emph>holds a </emph></td>
