@@ -38,6 +38,10 @@
                         .replace(/^\/query/, "/"+COMMAND)
                         .replace(/DBNAME/, DBNAME);
 
+                addHints();
+
+                function addHints() {
+
                 $("span.allocationsite").each(function (i, s) {
                     let allocationSite = s.innerHTML;
                     let query = base.replace(/THEQUERY/g, "AllocatedAt("+allocationSite+")");
@@ -112,6 +116,7 @@
                 $(".sourceLocation").each(function (i, s) {
                     s.innerHTML = '<i class="fa fa-file-text-o" aria-hidden="true" style="margin-right:3px;"></i>'+s.innerHTML;
                 });
+                }
         </script>
     </body>
 </html>

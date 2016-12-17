@@ -43,12 +43,13 @@ class QueryController @Inject()(lifecycle: ApplicationLifecycle,
             "objects" -> Json.toJson(objs.map(
               o => Json.toJson(
                 Map(
-                  "oid"            -> Some(toJson(o.oid)),
-                  "allocationSite" -> o.allocationSite.map(toJson(_)),
-                  "klass"          -> o.klass.map(toJson(_)),
-                  "firstUsage"     -> Some(toJson(o.firstUsage)),
-                  "lastUsage"      -> Some(toJson(o.lastUsage)),
-                  "thread"         -> o.thread.map(toJson(_))
+                  "oid"                -> Some(toJson(o.oid)),
+                  "allocationSite"     -> o.allocationSite.map(toJson(_)),
+                  "klass"              -> o.klass.map(toJson(_)),
+                  "firstUsage"         -> Some(toJson(o.firstUsage)),
+                  "lastUsage"          -> Some(toJson(o.lastUsage)),
+                  "thread"             -> o.thread.map(toJson(_)),
+                  "connectedComponent" -> Some(toJson("obj "+o.connectedComponent.toString))
                 ).filter(_._2.isDefined)
               )
             ))

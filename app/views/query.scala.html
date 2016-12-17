@@ -131,14 +131,14 @@
                     }
                 }
 
-                function drawVariableBarChart(allData, variable) {
+        function drawCountPerValueBarChart(allData, variable) {
                     let maxY = - Infinity;
                     const bardata = [];
                     for (const query in allData[variable]) {
                         if (allData[variable].hasOwnProperty(query)) {
                             const dataset = allData[variable][query];
-                            const xs = [];
-                            const ys = [];
+                            let xs = [];
+                            let ys = [];
                             for (const x in dataset) {
                                 if (dataset.hasOwnProperty(x)) {
                                     xs.push(x);
@@ -149,6 +149,35 @@
                                     }
                                 }
                             }
+
+                            function sortedData(xs, ys) {
+                                xys = [];
+                                for (let i=0; i<xs.length; ++i) {
+                                    const x = xs[i];
+                                    const y = ys[i];
+                                    xys.push({x, y})
+                                }
+
+                                xys.sort((a,b) => b.y - a.y);
+
+                                xs = [];
+                                ys = [];
+
+                                for (const xy of xys) {
+                                    xs.push(xy.x);
+                                    ys.push(xy.y);
+                                }
+
+                                return {
+                                    xs, ys
+                                }
+                            }
+
+                            //FIXME: we need to sort ALL data groups together, no?!
+                            xsys = sortedData(xs, ys);
+                            xs = xsys.xs;
+                            ys = xsys.ys;
+
                             bardata.push({
                                 x: xs,
                                 y: ys,
@@ -170,7 +199,6 @@
                         }
                     }
 
-                    debugger;
                     if (! barLayouts.hasOwnProperty(variable)) {
                         barLayouts[variable] = {
 //                            barmode: 'stack',
@@ -178,19 +206,23 @@
                             font: {
                                 size: 20
                             },
-                            height: 800,
+                            title: 'Number of objects per '+variable,
+                            height: 300,
                             width: Math.min(10000, bardata[bardata.length-1].y.length*30 + 500),
-                            yaxis: { range : [0, maxY*1.05]}
+                            yaxis: { range : [0, maxY*1.05] }
                         };
 
                         if (variable === 'klass' || variable === 'allocationSite') {
                             //todo
                             barLayouts[variable].margin = {
-                                l: 200,
                                 b: 600
                             };
                             barLayouts[variable].height += barLayouts[variable].margin.b;
-                            barLayouts[variable].width += barLayouts[variable].margin.l;
+                        } else if (variable === 'connectedComponent') {
+                            barLayouts[variable].margin = {
+                                b: 200
+                            };
+                            barLayouts[variable].height += barLayouts[variable].margin.b;
                         }
                     }
                     const barlayout = barLayouts[variable];
@@ -366,9 +398,6 @@
                     console.log({metaDataBuffer});
                     document.getElementById("metaDataContainer").innerHTML = '';
 
-
-//                    Plotly.newPlot(document.getElementById('metaDataContainer'), bardata, barlayout);
-
                     const container = d3.select("#metaDataContainer");
 
                     const barData = getBarData(data);
@@ -421,11 +450,12 @@
                             .text(v => v)
                             .attr("class", "code")
                             .append("div")
-                            .attr("style", "border: 1px solid;")
+//                            .attr("style", "border: 1px solid;")
                             .attr("id", v => "barchart-"+v);
 
                     for (const v of barData.variables['categorical']) {
-                        drawVariableBarChart(barData, v);
+                        console.log("########### drawCountPerValueBarChart "+v);
+                        drawCountPerValueBarChart(barData, v);
                     }
                 }
 
@@ -620,7 +650,6 @@
     </div>
 
     <script>
-        console.log({QUERIES});
         let allObjsSelection = "@(routes.QueryController.json_select(dbname, "Obj()"))";
         let allObjsMeta = "@(routes.QueryController.json_meta(dbname, "Obj()"))";
         d3.select("#jsonLinks")
