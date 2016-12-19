@@ -186,7 +186,7 @@
                     <tr>
                         <td><span class="oid">@rec.getAs[Long]("id")</span></td>
                         <td>
-                            @((Option(rec.getAs[String]("allocationsitefile")), Option(rec.getAs[Long]("allocationsiteline"))) match {
+                            @((Option(rec.getAs[String]("allocationsitefile")), Option(rec.getAs[Int]("allocationsiteline"))) match {
                                 case (Some(f), Some(l)) => Html("<span class='sourceLocation allocationsite'>"+f+":"+l+"</span>")
                                 case _ => Html("<span class='empty'>none</span>")
                             })
