@@ -30,7 +30,7 @@ class QueryController @Inject()(lifecycle: ApplicationLifecycle,
     {
     Action { implicit req =>
       implicit val data = mainC.getDB(dbname)
-      val cacheDuration = if (dbname == "test") 0 else 3600
+      val cacheDuration = 3600
       QueryParser.parseObjQuery(q) match {
         case Right(qObj) =>
           val metaQuery: WithMetaInformation = WithMetaInformation(qObj)
@@ -65,7 +65,7 @@ class QueryController @Inject()(lifecycle: ApplicationLifecycle,
 //      {_: RequestHeader => s"json/$q"},
 //      6.hours.toSeconds.asInstanceOf[Int])
     {
-      val cacheDuration = if (dbname == "test") 0 else 3600
+      val cacheDuration = 3600
       Action { implicit req =>
         implicit val data = mainC.getDB(dbname)
         println(s"db is: $dbname")
