@@ -131,7 +131,35 @@
                     }
                 }
 
-        function drawCountPerValueBarChart(allData, variable) {
+                function drawNumericalVar(allData, variable) {
+                    const data = allData[variable];
+                    const div = document.getElementById("numerical-div-"+variable);
+
+                    const boxPlotData = [];
+                    for (let q in data) {
+                        if (data.hasOwnProperty(q)) {
+                            boxPlotData.push({
+                                type: "histogram",
+                                name: projectFocusedQuery(q),
+                                x: data[q].y // yes, this SHOULD assign y to x -.-
+                            })
+                        }
+                    }
+
+                    const layout = {
+                        autosize: true,
+                        font: {
+                            size: 20
+                        },
+                        title: "Histogram: "+variable+" of objects",
+//                        height: 300,
+//                        width: Math.min(10000, bardata[bardata.length-1].y.length*30 + 500),
+//                        yaxis: { range : [0, maxY*1.05] }
+                    };
+                    Plotly.newPlot(div, boxPlotData, layout);
+                }
+
+                function drawCategoricalVar(allData, variable) {
                     let maxY = - Infinity;
                     const bardata = [];
                     for (let query in allData[variable]) {
@@ -229,7 +257,7 @@
                         }
                     }
                     const barlayout = barLayouts[variable];
-                    const chartId = "barchart-"+variable;
+                    const chartId = "categorical-div-"+variable;
 
                     const chart = document.getElementById(chartId);
                     if (havePlot.hasOwnProperty('variable') && havePlot[variable] == true) {
@@ -353,12 +381,14 @@
                         variables: {
                             categorical: [],
                             ordinal: [],
-                            numerical: ['classPercent']
+                            numerical: [],
+                            all: []
                         }
                     };
                     for (let v in metaDataBuffer.variables) {
                         if (metaDataBuffer.variables.hasOwnProperty(v)) {
                             barData.variables[metaDataBuffer.variables[v]].push(v);
+                            barData.variables.all.push(v);
                         }
                     }
 
@@ -369,7 +399,7 @@
                      *     for each value of the variable,
                      *       the number of objects that pass the query and have that value
                      */
-                    for (let v of barData.variables['categorical']) {
+                    for (let v of barData.variables.all) {
                         barData[v] = {};
                         for (let q of QUERIES) {
                             if(metaDataBuffer.variables.hasOwnProperty(v)) {
@@ -395,6 +425,24 @@
                             }
                         }
                     }
+
+
+                    // NUMERICAL DATA
+                    for (let q of QUERIES) {
+                        const qSet = new Set(data.data[q].pass);
+                        for (let v of barData.variables['numerical']) {
+                            barData[v][q] = {x: [], y: []};
+                            for (let o of metaDataBuffer.objects) {
+                                if (o.hasOwnProperty(v)) {
+                                    if(qSet.has(o.oid)) {
+                                        barData[v][q].x.push(o.oid);
+                                        barData[v][q].y.push(o[v]);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    //FIXME: derive data, like the numerical classPercent, allocationSitePercent, fieldPercent, ...
                     return barData;
                 }
 
@@ -407,59 +455,33 @@
                     const barData = getBarData(data);
                     console.log({barData});
 
-//                    const categoricalDataDivs = container
-//                            .selectAll("div#categoricalData")
-//                            .data(QUERIES)
-//                            .enter()
-//                            .append("div")
-//                            .attr("class", "categoricalData");
-//                    categoricalDataDivs
-//                            .append("h3")
-//                            .text(d => d);
-
-//                    const categoricalDataDivRows = categoricalDataDivs
-//                            .append("table")
-//                            .selectAll("tr")
-//                            .data(function (query) {
-//                                return barData.variables.categorical.map(function(variable) {
-//                                    return {variable, query};
-//                                });
-//                            })
-//                            .enter()
-//                            .append("tr");
-
-//                    categoricalDataDivRows
-//                            .append("td")
-//                            .append("div")
-//                            .attr("class", "query")
-//                            .text(x => x.variable);
-
-//                    categoricalDataDivRows
-//                            .append("td")
-//                            .append("div")
-//                            .attr("class", "code" )
-//                            .attr("width", "400px")
-//                            .attr("height", "200px")
-//                            .attr("id", x => "barchart-"+x.query+"-"+x.variable)
-//                            .text(x => JSON.stringify(barData[x.variable][x.query]));
-
-                    container
+                    const perVariableMetaInfo = container
                             .append("div")
-                            .attr("class", "perVariableMetaInfo")
+                            .attr("class", "perVariableMetaInfo");
+
+                    perVariableMetaInfo
+                            .append("div")
                             .selectAll("div")
                             .data(barData.variables['categorical'])
                             .enter()
                             .append("div")
-                            .append("h2")
-                            .text(v => v)
-                            .attr("class", "code")
+                            .attr("id", v => "categorical-div-"+v);
+
+                    perVariableMetaInfo
                             .append("div")
-//                            .attr("style", "border: 1px solid;")
-                            .attr("id", v => "barchart-"+v);
+                            .selectAll("div")
+                            .data(barData.variables['numerical'])
+                            .enter()
+                            .append("div")
+                            .attr("id", v => "numerical-div-"+v);
 
                     for (let v of barData.variables['categorical']) {
-                        console.log("########### drawCountPerValueBarChart "+v);
-                        drawCountPerValueBarChart(barData, v);
+                        drawCategoricalVar(barData, v);
+                    }
+
+                    for (let v of barData.variables['numerical']) {
+                        console.log("######### NUMERICAL VARIABLE "+v);
+                        drawNumericalVar(barData, v);
                     }
                 }
 
