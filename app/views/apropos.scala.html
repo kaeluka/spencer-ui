@@ -146,6 +146,7 @@
             parents
                     .append("span")
                     .html(function (d, i) {
+                        console.log({d});
                         let time = "<span class='evtidx'>"+d.start + "</span>";
                         if (d.type === "call") {
                             let caller = (d.caller == @idx) ? "calling " : "<span class='oid'>" + d.caller + "</span> calls ";
@@ -164,7 +165,8 @@
                                 } else if (d.kind === "fieldload") {
                                     return time+": loading <span class='oid'>"+d.callee+"</span>, using field <span class='code'>"+d.name+"</span>";
                                 } else {
-                                    throw "error: unknown kind: "+d.kind;
+                                    //return "error: unknown kind: "+d.kind+" - "+JSON.stringify(d);
+                                    return "";
                                 }
                             } else {
                                 if (d.kind === "read") {
@@ -176,7 +178,8 @@
                                 } else if (d.kind === "fieldload") {
                                     return time+": <span class='oid'>"+d.caller+"</span> loading <span class='code'>this</span> using its field <span class='code'>"+d.name+"</span>";
                                 } else {
-                                    throw "error: unknown kind: "+d.kind;
+                                    //return "error: unknown kind: "+d.kind+" - "+JSON.stringify(d);
+                                    return "";
                                 }
                             }
                         } else if (d.type === "ref") {
