@@ -116,11 +116,11 @@
                  */
                 function projectFocusedQuery(query) {
                     const queryConstraints = [];
-                    for (const inc of includeMatchList) {
+                    for (let inc of includeMatchList) {
                         queryConstraints.push(inc);
                     }
 
-                    for (const hide of hideMatchList) {
+                    for (let hide of hideMatchList) {
                         queryConstraints.push("Not("+hide+")");
                     }
 
@@ -134,12 +134,12 @@
         function drawCountPerValueBarChart(allData, variable) {
                     let maxY = - Infinity;
                     const bardata = [];
-                    for (const query in allData[variable]) {
+                    for (let query in allData[variable]) {
                         if (allData[variable].hasOwnProperty(query)) {
                             const dataset = allData[variable][query];
                             let xs = [];
                             let ys = [];
-                            for (const x in dataset) {
+                            for (let x in dataset) {
                                 if (dataset.hasOwnProperty(x)) {
                                     xs.push(x);
                                     let y = dataset[x];
@@ -159,11 +159,14 @@
                                 }
 
                                 xys.sort((a,b) => b.y - a.y);
+                                if (QUERIES.length > 1) {
+                                    xys = xys.slice(0, 30)
+                                }
 
                                 xs = [];
                                 ys = [];
 
-                                for (const xy of xys) {
+                                for (let xy of xys) {
                                     xs.push(xy.x);
                                     ys.push(xy.y);
                                 }
@@ -338,7 +341,8 @@
                     const data = getRawData(includeMatchList, hideMatchList);
 
                     drawMatrix(data);
-//                    drawTable(data);
+                    drawTable(data);
+                    addHints();
                     if (metaDataBuffer.received) {
                         drawMetaData(data);
                     }
@@ -352,7 +356,7 @@
                             numerical: ['classPercent']
                         }
                     };
-                    for (const v in metaDataBuffer.variables) {
+                    for (let v in metaDataBuffer.variables) {
                         if (metaDataBuffer.variables.hasOwnProperty(v)) {
                             barData.variables[metaDataBuffer.variables[v]].push(v);
                         }
@@ -365,9 +369,9 @@
                      *     for each value of the variable,
                      *       the number of objects that pass the query and have that value
                      */
-                    for (const v of barData.variables['categorical']) {
+                    for (let v of barData.variables['categorical']) {
                         barData[v] = {};
-                        for (const q of QUERIES) {
+                        for (let q of QUERIES) {
                             if(metaDataBuffer.variables.hasOwnProperty(v)) {
                                 barData[v][q] = {};
                             }
@@ -375,10 +379,10 @@
                     }
                     // for each variable, go through metaDataBuffer.objects
                     // and
-                    for (const query of QUERIES) {
+                    for (let query of QUERIES) {
                         const qSet = new Set(data.data[query].pass);
-                        for (const metaDataObject of metaDataBuffer.objects) {
-                            for (const variable of barData.variables['categorical']) {
+                        for (let metaDataObject of metaDataBuffer.objects) {
+                            for (let variable of barData.variables['categorical']) {
                                 if (!barData[variable][query].hasOwnProperty(metaDataObject[variable])) {
                                     barData[variable][query][metaDataObject[variable]] = 0;
                                 }
@@ -453,7 +457,7 @@
 //                            .attr("style", "border: 1px solid;")
                             .attr("id", v => "barchart-"+v);
 
-                    for (const v of barData.variables['categorical']) {
+                    for (let v of barData.variables['categorical']) {
                         console.log("########### drawCountPerValueBarChart "+v);
                         drawCountPerValueBarChart(barData, v);
                     }
@@ -611,10 +615,10 @@
 
 
                     const queryConstraints = [];
-                    for (const inc of includeMatchList) {
+                    for (let inc of includeMatchList) {
                         queryConstraints.push(inc);
                     }
-                    for (const hide of hideMatchList) {
+                    for (let hide of hideMatchList) {
                         queryConstraints.push("Not("+hide+")");
                     }
 
