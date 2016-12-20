@@ -58,6 +58,8 @@
 
                 var barLayouts = {};
 
+                const enabledVariables = {};
+
                 var allObjs = [];
                 {
                     const req = new XMLHttpRequest();
@@ -102,6 +104,11 @@
                         }
                         req.onload = function (resp) {
                             metaDataBuffer = JSON.parse(req.responseText);
+                            for (let v in metaDataBuffer.variables) {
+                                if (metaDataBuffer.variables.hasOwnProperty(v)) {
+                                    enabledVariables[v] = false;
+                                }
+                            }
                             metaDataBuffer.received = true;
                             draw();
                         };
@@ -152,9 +159,7 @@
                             size: 20
                         },
                         title: "Histogram: "+variable+" of objects",
-//                        height: 300,
-//                        width: Math.min(10000, bardata[bardata.length-1].y.length*30 + 500),
-//                        yaxis: { range : [0, maxY*1.05] }
+                        width: 1000,
                     };
                     Plotly.newPlot(div, boxPlotData, layout);
                 }
@@ -239,7 +244,7 @@
                             },
                             title: 'Number of objects per '+variable,
                             height: 300,
-                            width: Math.min(10000, bardata[bardata.length-1].y.length*30 + 500),
+                            width: Math.min(1000, bardata[bardata.length-1].y.length*30 + 500),
                             yaxis: { range : [0, maxY*1.05] }
                         };
 
@@ -426,7 +431,6 @@
                         }
                     }
 
-
                     // NUMERICAL DATA
                     for (let q of QUERIES) {
                         const qSet = new Set(data.data[q].pass);
@@ -455,7 +459,24 @@
                     const barData = getBarData(data);
                     console.log({barData});
 
+                    function toggleVariable(data) {
+                        return function (v) {
+                            console.log("toggling "+v);
+                            if (enabledVariables[v]) {
+                                document.getElementById("toggle-variable-icon-"+v)
+                                        .setAttribute("class", "fa fa-angle-down")
+                            } else {
+                                document.getElementById("toggle-variable-icon-"+v)
+                                        .setAttribute("class", "fa fa-angle-up")
+                            }
+                            enabledVariables[v] = ! enabledVariables[v];
+                            drawMetaData(data)
+                        }
+                    }
+
                     const perVariableMetaInfo = container
+                            .append("h2")
+                            .text("Object Variables")
                             .append("div")
                             .attr("class", "perVariableMetaInfo");
 
@@ -465,6 +486,16 @@
                             .data(barData.variables['categorical'])
                             .enter()
                             .append("div")
+                            .attr("class", "variable-div")
+                            .append("h3")
+                            .on("click", toggleVariable(data))
+                            .html(function(v) {
+                                if (enabledVariables[v]) {
+                                    return '<i id="toggle-variable-icon-'+v+'" class="fa fa-angle-up"   aria-hidden="true"></i> '+v
+                                } else {
+                                    return '<i id="toggle-variable-icon-'+v+'" class="fa fa-angle-down" aria-hidden="true"></i> '+v
+                                }})
+                            .append("div")
                             .attr("id", v => "categorical-div-"+v);
 
                     perVariableMetaInfo
@@ -473,15 +504,30 @@
                             .data(barData.variables['numerical'])
                             .enter()
                             .append("div")
-                            .attr("id", v => "numerical-div-"+v);
+                            .attr("class", "variable-div")
+                            .append("h3")
+                            .on("click", toggleVariable(data))
+                            .html(function(v) {
+                                if (enabledVariables[v]) {
+                                    return '<i id="toggle-variable-icon-'+v+'" class="fa fa-angle-up"   aria-hidden="true"></i> '+v
+                                } else {
+                                    return '<i id="toggle-variable-icon-'+v+'" class="fa fa-angle-down" aria-hidden="true"></i> '+v
+                                }})
+                            .append("div")
+                            .attr("id", v => "numerical-div-"+v)
+                            ;
 
                     for (let v of barData.variables['categorical']) {
-                        drawCategoricalVar(barData, v);
+                        if (enabledVariables[v]) {
+                            drawCategoricalVar(barData, v);
+                        }
                     }
 
                     for (let v of barData.variables['numerical']) {
                         console.log("######### NUMERICAL VARIABLE "+v);
-                        drawNumericalVar(barData, v);
+                        if (enabledVariables[v]) {
+                            drawNumericalVar(barData, v);
+                        }
                     }
                 }
 

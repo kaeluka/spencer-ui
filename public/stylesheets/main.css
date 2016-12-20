@@ -72,8 +72,13 @@ svg#resultMatrix {
     margin-right: auto;
 }
 
-
-
+div.variable-div {
+    display: inline-flex;
+    border: solid 1px grey;
+    border-radius: 15px;
+    margin: 5px;
+    padding: 5px;
+}
 
 .query a {
     /* the font chrome uses in the URL bar for OS X: */
