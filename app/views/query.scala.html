@@ -158,7 +158,7 @@
                         font: {
                             size: 20
                         },
-                        title: "Histogram: "+variable+" of objects",
+                        title: "Histogram",
                         width: 1000,
                     };
                     Plotly.newPlot(div, boxPlotData, layout);
@@ -422,10 +422,7 @@
                                     barData[variable][query][metaDataObject[variable]] = 0;
                                 }
                                 if (qSet.has(metaDataObject.oid)) {
-//                                    if (metaDataObject.hasOwnProperty(variable)) {
-//                                        debugger;
-                                        barData[variable][query][metaDataObject[variable]] += 1;
-//                                    }
+                                    barData[variable][query][metaDataObject[variable]] += 1;
                                 }
                             }
                         }
@@ -446,7 +443,31 @@
                             }
                         }
                     }
-                    //FIXME: derive data, like the numerical classPercent, allocationSitePercent, fieldPercent, ...
+                    function deriveData(barData, variableKind, artificialVarName, f) {
+                        barData.variables[variableKind].push(artificialVarName);
+                        barData[artificialVarName] = {};
+                        for (let q of QUERIES) {
+                            const qSet = new Set(data.data[q].pass);
+                            barData[artificialVarName][q] = {x: [], y: []};
+                            for (let o of metaDataBuffer.objects) {
+                                if(qSet.has(o.oid)) {
+                                    const point = f(o);
+                                    if (point != undefined) {
+                                        barData[artificialVarName][q].x.push(point.x);
+                                        barData[artificialVarName][q].y.push(point.y);
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    deriveData(barData, "numerical", "log10(lifeTime)", function(o) {
+                        return {
+                            x: o.oid,
+                            y: Math.log10(o.lastUsage - o.firstUsage)
+                        };
+                    });
+
                     return barData;
                 }
 
