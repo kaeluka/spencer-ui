@@ -148,13 +148,14 @@
                             boxPlotData.push({
                                 type: "histogram",
                                 name: projectFocusedQuery(q),
-                                x: data[q].y // yes, this SHOULD assign y to x -.-
+                                x: data[q].y, // yes, this SHOULD assign y to x -.-
+                                y: data[q].x,
+                                nbinsx: 30
                             })
                         }
                     }
 
                     const layout = {
-                        autosize: true,
                         font: {
                             size: 20
                         },
