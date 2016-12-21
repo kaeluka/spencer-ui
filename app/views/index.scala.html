@@ -90,8 +90,11 @@
                 "And(ImmutableObj() AllocatedAt(String.java:1933))",
                 "Or(UniqueObj() ImmutableObj())",
                 "Deeply(Or(UniqueObj() ImmutableObj()))",
+                "HeapDeeply(Or(UniqueObj() ImmutableObj()))",
                 "ReachableFrom(AllocatedAt(String.java:1933))",
-                "CanReach(AllocatedAt(String.java:1933))"
+                "HeapReachableFrom(AllocatedAt(String.java:1933))",
+                "CanReach(AllocatedAt(String.java:1933))",
+                "CanHeapReach(AllocatedAt(String.java:1933))"
             )
                     .map(QueryParser.parseObjQuery)
                     .map(x => { assert(x.isRight, x+" must be right!"); x.right.get })) {
