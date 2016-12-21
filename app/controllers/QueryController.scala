@@ -92,7 +92,8 @@ class QueryController @Inject()(lifecycle: ApplicationLifecycle,
 //      6.hours.toSeconds.asInstanceOf[Int])
     {
       Action { implicit req =>
-        val qs = qs_.replace("%20", " ")
+        val qs = QueryParser.unescape(qs_)
+        println(s"qs=$qs")
         val eitherQueries = qs.split("/").map(QueryParser.parseObjQuery(_))
 
         if (eitherQueries.exists(_.isLeft)) {
@@ -100,7 +101,7 @@ class QueryController @Inject()(lifecycle: ApplicationLifecycle,
         } else {
           println("================================ " + qs + " -parsed-> " + eitherQueries.mkString(", "))
           val queries = eitherQueries.map(_.right.get)
-          if (qs != queries.mkString("/")) {
+          if (qs != QueryParser.unescape(queries.mkString("/"))) {
             println("redirecting..")
             Redirect(routes.QueryController.query(dbname, queries.mkString("/")))
           } else {
