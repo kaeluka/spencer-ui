@@ -99,11 +99,6 @@
                     s.innerHTML = annotateEvent(s.innerHTML);
                 });
 
-                $(".query").each(function (i, s) {
-                    let q = s.innerHTML;
-                    s.innerHTML = "<a target='_blank' href='"+base.replace(/THEQUERY/g, q).replace(/COMMAND/g, "/query")+"'>"+q+"</a>"
-                });
-
                 $(".useKind").each(function (i, s) {
                     let kind = s.innerHTML;
                     s.className += " "+kind;

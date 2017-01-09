@@ -8,7 +8,7 @@
 
     <style>
     #resultMatrix rect.matched {
-        fill: #C83737;
+        fill: #6F6F6F;
     }
 
     .submitFocusWrapper {
@@ -37,12 +37,17 @@
             var COMMAND = "query";
             var DBNAME  = "@dbname";
             var QUERIES = [@Html(queries.map("'"+_.toString+"'").mkString(", "))];
+            var COLORS = randomColor({count: QUERIES.length, seed: 12345, hue: 'random', luminosity: 'dark'});
+            var COLORS_MAP = {};
+            for (let i=0; i<QUERIES.length; ++i) {
+                COLORS_MAP[QUERIES[i]] = COLORS[i];
+            }
     </script>
 
     <div class="result">
 
         <div class="submitFocusWrapper">
-            <a class="center" id="submitFocusLink" href="@routes.QueryController.query(dbname, queries.mkString("/"))">select focus objects <i class="fa fa-angle-right" aria-hidden="true"></i></a>
+            <a class="center" id="submitFocusLink" href="@routes.QueryController.query(dbname, queries.mkString("/"))">refine query <i class="fa fa-angle-right" aria-hidden="true"></i></a>
         </div>
         <svg id="resultMatrix"></svg>
 
@@ -65,6 +70,7 @@
                     const req = new XMLHttpRequest();
                     req.open("GET", '@routes.QueryController.json_select(dbname, "Obj()")');
                     req.onload = (e) => {
+                        console.log({req, e});
                         allObjs = JSON.parse(req.responseText).objects;
                         requestAllData();
                     };
@@ -82,7 +88,7 @@
                         const req = new XMLHttpRequest();
                         req.open("GET", "@routes.QueryController.json_select(dbname, q.toString)");
                         req.onload = function (e) {
-                            console.log({req});
+                            console.log({req, e});
                             const resp = JSON.parse(req.responseText);
                             dataBuffer["@q.toString"] = resp.objects.filter(o => allObjsSet.has(o));
                             const spinner = document.getElementById("spinner-@i").parentNode.innerHTML = "<i class='fa fa-check' aria-hidden='true'></i>";
@@ -102,7 +108,8 @@
                         } else {
                             req.open("GET", '@routes.QueryController.json_meta(dbname, queries(0).toString)');
                         }
-                        req.onload = function (resp) {
+                        req.onload = function (e) {
+                            console.log({req, e});
                             metaDataBuffer = JSON.parse(req.responseText);
                             for (let v in metaDataBuffer.variables) {
                                 if (metaDataBuffer.variables.hasOwnProperty(v)) {
@@ -142,12 +149,24 @@
                     const data = allData[variable];
                     const div = document.getElementById("numerical-div-"+variable);
 
-                    const boxPlotData = [];
+                    const histDiv = document.createElement("div");
+                    const  boxDiv = document.createElement("div");
+
+                    div.appendChild(histDiv);
+                    div.appendChild( boxDiv);
+
+                    const histData = [];
+                    const boxData = [];
                     for (let q in data) {
                         if (data.hasOwnProperty(q)) {
-                            boxPlotData.push({
+                            histData.push({
                                 type: "histogram",
                                 name: projectFocusedQuery(q),
+                                showlegend: false,
+                                hoverinfo: 'name+x+y',
+                                marker: {
+                                  color: COLORS[histData.length]
+                                },
                                 x: data[q].y, // yes, this SHOULD assign y to x -.-
                                 y: data[q].x,
                                 nbinsx: 30
@@ -155,19 +174,44 @@
                         }
                     }
 
-                    const layout = {
+                    Plotly.newPlot(histDiv, histData, {
                         font: {
                             size: 20
                         },
                         title: "Histogram",
                         width: 1000,
-                    };
-                    Plotly.newPlot(div, boxPlotData, layout);
+                    });
+
+                    if (variable != "firstUsage" && variable != "lastUsage") {
+                        for (let q in data) {
+                            if (data.hasOwnProperty(q)) {
+                                boxData.push({
+                                    type: "box",
+                                    name: projectFocusedQuery(q),
+                                    showlegend: false,
+                                    hoverinfo: 'name+x+y',
+                                    marker: {
+                                      color: COLORS[boxData.length]
+                                    },
+                                    y: data[q].y,
+                                })
+                            }
+                        }
+
+                        Plotly.newPlot(boxDiv, boxData, {
+                            font: {
+                                size: 20
+                            },
+                            title: "Boxplot",
+                            width: 1000,
+                        });
+                    }
                 }
 
                 function drawCategoricalVar(allData, variable) {
                     let maxY = - Infinity;
                     const bardata = [];
+                    const bardataRelToObjs = [];
                     for (let query in allData[variable]) {
                         if (allData[variable].hasOwnProperty(query)) {
                             const dataset = allData[variable][query];
@@ -215,65 +259,83 @@
                             xs = xsys.xs;
                             ys = xsys.ys;
 
+                            console.log("######### CATEGORICAL VARIABLE "+projectFocusedQuery(query))
+
                             bardata.push({
                                 x: xs,
                                 y: ys,
                                 type: 'bar',
                                 mode: 'lines',
-                                hoverinfo: 'y',
+                                hoverinfo: 'name+x+y',
+                                showlegend: false,
                                 name: projectFocusedQuery(query),
-//                                opacity: 0.08,
-//                                marker: {
-//                                    color: 'red',
-//                                    line: {
-//                                        color: 'black',
-//                                        width: 2
-//                                    }
-//                                }
+                                marker: {
+                                    color: COLORS[bardata.length]
+                                }
                             });
 
-
+                            bardataRelToObjs.push({
+                                x: xs,
+                                y: ys.map(cnt => cnt*100.0/allObjs.length),
+                                type: 'bar',
+                                mode: 'lines',
+                                hoverinfo: 'name+x+y',
+                                showlegend: false,
+                                name: projectFocusedQuery(query),
+                                marker: {
+                                    color: COLORS[bardataRelToObjs.length]
+                                }
+                            });
                         }
                     }
 
                     if (! barLayouts.hasOwnProperty(variable)) {
                         barLayouts[variable] = {
-//                            barmode: 'stack',
-                            autosize: false,
                             font: {
                                 size: 20
                             },
-                            title: 'Number of objects per '+variable,
+                            title: '# of objs p. '+variable,
                             height: 300,
                             width: Math.min(1000, bardata[bardata.length-1].y.length*30 + 500),
-                            yaxis: { range : [0, maxY*1.05] }
+                            //yaxis: { range : [0, maxY*1.05] }
+                        };
+                        barLayouts[variable+'RelToObjs%'] = {
+                            font: {
+                                size: 20
+                            },
+                            title: '% of objs p. '+variable+' (rel. to all objs)',
+                            height: 300,
+                            width: Math.min(1000, bardata[bardata.length-1].y.length*30 + 500)
+                            //yaxis: { range : [0, 100] }
                         };
 
                         if (variable === 'klass' || variable === 'allocationSite') {
-                            //todo
                             barLayouts[variable].margin = {
                                 b: 600
                             };
                             barLayouts[variable].height += barLayouts[variable].margin.b;
-                        } else if (variable === 'connectedComponent') {
-                            barLayouts[variable].margin = {
-                                b: 200
-                            };
-                            barLayouts[variable].height += barLayouts[variable].margin.b;
+                            barLayouts[variable+'RelToObjs%'].margin = barLayouts[variable].margin;
+                            barLayouts[variable+'RelToObjs%'].height = barLayouts[variable].height;
                         }
                     }
-                    const barlayout = barLayouts[variable];
+                    const barlayout          = barLayouts[variable];
+                    const barlayoutRelToObjs = barLayouts[variable+'RelToObjs%'];
                     const chartId = "categorical-div-"+variable;
 
                     const chart = document.getElementById(chartId);
-                    if (havePlot.hasOwnProperty('variable') && havePlot[variable] == true) {
-                        chart.data = bardata;
+                    const barDiv = document.createElement("div");
+                    const barDivRelToObjs = document.createElement("div");
+                    chart.appendChild(barDiv);
+                    chart.appendChild(barDivRelToObjs);
+                    //if (havePlot.hasOwnProperty('variable') && havePlot[variable] == true) {
+                    //    chart.data = bardata;
 
-                        Plotly.redraw(chart)
-                    } else {
-                        Plotly.newPlot(chart, bardata, barlayout);
+                    //    Plotly.redraw(chart)
+                    //} else {
+                        Plotly.newPlot(barDiv,          bardata,          barlayout);
+                        Plotly.newPlot(barDivRelToObjs, bardataRelToObjs, barlayoutRelToObjs);
                         havePlot[variable] = true;
-                    }
+                    //}
                 }
 
                 /**
@@ -444,7 +506,24 @@
                             }
                         }
                     }
-                    function deriveData(barData, variableKind, artificialVarName, f) {
+
+                    /*for (let v of barData.variables.categorical) {
+                        barData[v+'%'] = {};
+                        barData.variables.numerical.push(v+'%');
+                        for (let query of QUERIES) {
+                            barData[v+'%'][query] = {x:[], y:[]};
+                            for (let klass in barData[v][query]) {
+                                if (barData[v][query].hasOwnProperty(klass)) {
+                                    barData[v+'%'][query].x.push(klass);
+                                    barData[v+'%'][query].y.push(100.0 * barData[v][query][klass] / allObjs.length);
+                                }
+                            }
+                        }
+                        console.log(v+'%: ');
+                        console.log(barData[v+'%']);
+                    }*/
+
+                    function deriveObjData(barData, variableKind, artificialVarName, f) {
                         barData.variables[variableKind].push(artificialVarName);
                         barData[artificialVarName] = {};
                         for (let q of QUERIES) {
@@ -462,7 +541,7 @@
                         }
                     }
 
-                    deriveData(barData, "numerical", "log10(lifeTime)", function(o) {
+                    deriveObjData(barData, "numerical", "log10(lifeTime)", function(o) {
                         return {
                             x: o.oid,
                             y: Math.log10(o.lastUsage - o.firstUsage)
@@ -584,7 +663,7 @@
 
                 function drawMatrix(data) {
                     const N = @queries.size; //number of queries
-                    const margin = {top: 0, bottom: 100, left: 200, right: 200};
+                    const margin = {top: 0, bottom: 100, left: 400, right: 200};
 
                     const svg = d3.select("#resultMatrix")
                             .attr("width", (N)*boxSize+margin.left+margin.right)
@@ -682,12 +761,13 @@
                             .on("mouseover", mouseOverHandler )
                             .on("mouseout",  mouseOutHandler   );
 
+                    mouseOutHandler(QUERIES[0], 0);
+
                     // "loading" symbols:
                     cells.append("i")
                             .attr("class", "fa fa-spinner");
 
                 }
-
 
                 function clickHandler(d, i) {
                     console.log("click " + i);
@@ -700,7 +780,7 @@
                         $(".legend" + i).css("fill", "black");
                     } else {
                         includeMatchList.add(QUERIES[i]);
-                        $(".legend" + i).css("fill", "#C83737");
+                        $(".legend" + i).css("fill", "#6F6F6F");
                     }
 
 
@@ -727,12 +807,15 @@
                 }
 
                 function mouseOverHandler(d, i) {
-                    $(".matched").css("fill", "C0C0C0");
-                    $(".objectsRect"+i).css("fill", "#EE4343");
+                    $(".matched").css("fill", "A0A0A0");
+                    $(".objectsRect"+i).css("fill", COLORS[i]);
                 }
 
                 function mouseOutHandler(d, i) {
-                    $(".matched").css("fill", "#C83737");
+                    $(".matched").css("fill", "#6F6F6F");
+                    for (let i=0; i<QUERIES.length; ++i) {
+                        $(".objectsRect"+i).css("fill", COLORS[i]);
+                    }
                 }
         </script>
 
@@ -762,5 +845,13 @@
                 .append("a")
                 .attr("href", allObjsMeta)
                 .text("Meta information (JSON)")
+
+        $(".query").each(function (i, s) {
+            let q = s.innerHTML;
+            if (! q.startsWith("<a ")) {
+                s.style.backgroundColor = COLORS_MAP[q];
+                s.style.color = 'white';
+            }
+        });
     </script>
 }
