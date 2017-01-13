@@ -133,12 +133,25 @@
         </div>
 
         <script>
+                String.prototype.trimEnd = function(c) {
+                    if (c)
+                        return this.replace(new RegExp(c.escapeRegExp() + "*$"), '');
+                    return this.replace(/\s+$/, '');
+                };
+
+                String.prototype.trimStart = function(c) {
+                    if (c)
+                        return this.replace(new RegExp("^" + c.escapeRegExp() + "*"), '');
+                    return this.replace(/^\s+/, '');
+                };
+
+                String.prototype.escapeRegExp = function() {
+                    return this.replace(/[.*+?^${}()|[\]\/\\]/g, "\\$0");
+                };
                 var color = randomColor({count: @(queries.size), seed: 123});
                 var havePlot = {};
 
                 var barLayouts = {};
-
-                const enabledVariables = {};
 
                 var allObjs = [];
                 {
@@ -154,6 +167,60 @@
 
                 var dataBuffer = {};
                 var metaDataBuffer = { received: false };
+                const enabledVariables = {};
+
+                function getQueryVariable(variable) {
+                    // from: https://css-tricks.com/snippets/javascript/get-url-variables/
+                    const query = window.location.search.substring(1);
+                    const vars = query.split("&");
+                    for (var i=0;i<vars.length;i++) {
+                        var pair = vars[i].split("=");
+                        if(pair[0] == variable){return pair[1];}
+                    }
+                    return(false);
+                }
+
+                function setURLEncodedKey(key, value) {
+                    //adapted from: https://weblog.west-wind.com/posts/2009/Sep/07/Get-and-Set-Querystring-Values-in-JavaScript
+                    const query = window.location.search;
+                    let q = query + "&";
+                    const re = new RegExp("[?|&]" + key + "=.*?&");
+                    if (!re.test(q)) {
+                        q += key + "=" + encodeURI(value);
+                    } else {
+                        q = q.replace(re, "&" + key + "=" + (value) + "&");
+                    }
+                    q = q.trimStart("&").trimEnd("&");
+                    const newquery = q[0] =="?" ? q : q = "?" + q;
+                    var newurl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+                    if (value !== "") {
+                        newurl = newurl + newquery;
+                    }
+                    window.history.pushState({path:newurl},'',newurl);
+                }
+
+                function getURLVisualisations() {
+                    const enabledVisualisations = getQueryVariable("vis");
+                    if (enabledVisualisations) {
+                        return enabledVisualisations.split("+");
+                    } else {
+                        return [];
+                    }
+                }
+
+                function updateURLVisualisation(variable, enabled) {
+                    const vs = [];
+                    for (v in enabledVariables) {
+                        if (enabledVariables.hasOwnProperty(v)) {
+                            if (enabledVariables[v]) { vs.push(v); }
+                        }
+                    }
+                    setURLEncodedKey("vis", vs.join("+"));
+                }
+
+                for(let v of getURLVisualisations()) {
+                   enabledVariables[v] = true;
+                }
 
                 function requestAllData() {
                     const allObjsSet = new Set(allObjs);
@@ -186,9 +253,12 @@
                         req.onload = function (e) {
                             console.log({req, e});
                             metaDataBuffer = JSON.parse(req.responseText);
+                            //default visualisations to be disabled:
                             for (let v in metaDataBuffer.variables) {
                                 if (metaDataBuffer.variables.hasOwnProperty(v)) {
-                                    enabledVariables[v] = false;
+                                    if (! enabledVariables.hasOwnProperty(v)) {
+                                        enabledVariables[v] = false;
+                                    }
                                 }
                             }
                             metaDataBuffer.received = true;
@@ -670,7 +740,9 @@
                                         .setAttribute("class", "fa fa-angle-up")
                             }
                             enabledVariables[v] = ! enabledVariables[v];
-                            drawMetaData(data)
+                            updateURLVisualisation(v, enabledVariables[v]);
+
+                            drawMetaData(data);
                         }
                     }
 
