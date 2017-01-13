@@ -48,7 +48,10 @@ class QueryController @Inject()(lifecycle: ApplicationLifecycle,
                   "klass"              -> o.klass.map(toJson(_)),
                   "firstUsage"         -> Some(toJson(o.firstUsage)),
                   "lastUsage"          -> Some(toJson(o.lastUsage)),
-                  "thread"             -> o.thread.map(toJson(_))
+                  "thread"             -> o.thread.map(toJson(_)),
+                  "numFieldWrites"     -> Some(toJson(o.numFieldWrites)),
+                  "numFieldReads"      -> Some(toJson(o.numFieldReads)),
+                  "numCalls"           -> Some(toJson(o.numCalls))
                 ).filter(_._2.isDefined)
               )
             ))
