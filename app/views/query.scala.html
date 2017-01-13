@@ -196,7 +196,7 @@
                     if (value !== "") {
                         newurl = newurl + newquery;
                     }
-                    window.history.pushState({path:newurl},'',newurl);
+                    window.history.replaceState({path:newurl},'',newurl);
                 }
 
                 function getURLVisualisations() {
@@ -344,30 +344,28 @@
                         width: 1000,
                     });
 
-                    if (variable != "firstUsage" && variable != "lastUsage") {
-                        for (let q in data) {
-                            if (data.hasOwnProperty(q)) {
-                                boxData.push({
-                                    type: "box",
-                                    name: projectFocusedQuery(q),
-                                    showlegend: false,
-                                    hoverinfo: 'name+x+y',
-                                    marker: {
-                                      color: COLORS[boxData.length]
-                                    },
-                                    y: data[q].y,
-                                })
-                            }
+                    for (let q in data) {
+                        if (data.hasOwnProperty(q)) {
+                            boxData.push({
+                                type: "box",
+                                name: projectFocusedQuery(q),
+                                showlegend: false,
+                                hoverinfo: 'name+x+y',
+                                marker: {
+                                    color: COLORS[boxData.length]
+                                },
+                                y: data[q].y,
+                            })
                         }
-
-                        Plotly.newPlot(boxDiv, boxData, {
-                            font: {
-                                size: 20
-                            },
-                            title: "Boxplot",
-                            width: 1000,
-                        });
                     }
+
+                    Plotly.newPlot(boxDiv, boxData, {
+                        font: {
+                            size: 20
+                        },
+                        title: "Boxplot",
+                        width: 1000,
+                    });
                 }
 
                 function drawCategoricalVar(allData, variable) {
