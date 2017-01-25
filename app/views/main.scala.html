@@ -38,7 +38,6 @@
                         .replace(/^\/query/, "/"+COMMAND)
                         .replace(/DBNAME/, DBNAME);
 
-                addHints();
 
                 function addHints() {
 
@@ -112,6 +111,7 @@
                     s.innerHTML = '<i class="fa fa-file-text-o" aria-hidden="true" style="margin-right:3px;"></i>'+s.innerHTML;
                 });
                 }
+                addHints();
         </script>
     </body>
 </html>
