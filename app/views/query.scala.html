@@ -33,45 +33,45 @@
 
         function focusQueryHandler(i) {
             const newQueries = projectFocusQueries(QUERIES, i);
-            window.location.href = "http://spencer.it.uu.se/query/"+DBNAME+"/"+newQueries;
+            window.location.href = "http://spencer-t.racing/query/"+DBNAME+"/"+newQueries;
         }
         function negateQueryHandler(i) {
             QUERIES[i] = "Not("+QUERIES[i]+")";
-            window.location.href = "http://spencer.it.uu.se/query/"+DBNAME+"/"+QUERIES.join("/");
+            window.location.href = "http://spencer-t.racing/query/"+DBNAME+"/"+QUERIES.join("/");
         }
         function hideQueryHandler(i) {
             const newQueries = projectHideQueries(QUERIES, i);
-            window.location.href = "http://spencer.it.uu.se/query/"+DBNAME+"/"+newQueries;
+            window.location.href = "http://spencer-t.racing/query/"+DBNAME+"/"+newQueries;
         }
         function splitQueryHandler(i) {
             if (QUERIES.length == 1) {
-                window.location.href = "http://spencer.it.uu.se/query/"+DBNAME+"/"+QUERIES[0]+"/Not("+QUERIES[0]+")";
+                window.location.href = "http://spencer-t.racing/query/"+DBNAME+"/"+QUERIES[0]+"/Not("+QUERIES[0]+")";
             } else {
                 const newQueriesFocused = projectFocusQueries(QUERIES, i);
                 const newQueriesHidden  = projectHideQueries(QUERIES, i);
-                window.location.href = "http://spencer.it.uu.se/query/"+DBNAME+"/"+newQueriesFocused+"/"+newQueriesHidden;
+                window.location.href = "http://spencer-t.racing/query/"+DBNAME+"/"+newQueriesFocused+"/"+newQueriesHidden;
             }
         }
         function moveQueryUpHandler(i) {
             const Qi = QUERIES[i];
             QUERIES.splice(i,1);
             QUERIES.splice(i-1,0, Qi);
-            window.location.href = "http://spencer.it.uu.se/query/"+DBNAME+"/"+QUERIES.join("/");
+            window.location.href = "http://spencer-t.racing/query/"+DBNAME+"/"+QUERIES.join("/");
         }
         function moveQueryDownHandler(i) {
             const Qi = QUERIES[i];
             QUERIES.splice(i,1);
             QUERIES.splice(i+1,0, Qi);
-            window.location.href = "http://spencer.it.uu.se/query/"+DBNAME+"/"+QUERIES.join("/");
+            window.location.href = "http://spencer-t.racing/query/"+DBNAME+"/"+QUERIES.join("/");
         }
         function removeQueryHandler(i) {
             //remove the query from QUERIES:
             QUERIES.splice(i, 1);
-            window.location.href = "http://spencer.it.uu.se/query/"+DBNAME+"/"+QUERIES.join("/");
+            window.location.href = "http://spencer-t.racing/query/"+DBNAME+"/"+QUERIES.join("/");
         }
         function wrapQueryHandler(i, hoq) {
             QUERIES[i] = hoq+"("+QUERIES[i]+")";
-            window.location.href = "http://spencer.it.uu.se/query/"+DBNAME+"/"+QUERIES.join("/");
+            window.location.href = "http://spencer-t.racing/query/"+DBNAME+"/"+QUERIES.join("/");
         }
     </script>
 
@@ -246,9 +246,9 @@
                     {
                         const req = new XMLHttpRequest();
                         if (QUERIES.length > 1) {
-                            req.open("GET", '@routes.QueryController.json_meta(dbname, queries.mkString("Or(", " ", ")"))');
+                            req.open("GET", '@routes.QueryController.json_meta2(dbname, queries.mkString("Or(", " ", ")"))');
                         } else {
-                            req.open("GET", '@routes.QueryController.json_meta(dbname, queries(0).toString)');
+                            req.open("GET", '@routes.QueryController.json_meta2(dbname, queries(0).toString)');
                         }
                         req.onload = function (e) {
                             console.log({req, e});
@@ -634,15 +634,20 @@
                     }
                     // for each variable, go through metaDataBuffer.objects
                     // and
+                    const oids = metaDataBuffer.data.oid;
                     for (let query of QUERIES) {
                         const qSet = new Set(data.data[query].pass);
-                        for (let metaDataObject of metaDataBuffer.objects) {
-                            for (let variable of barData.variables['categorical']) {
-                                if (!barData[variable][query].hasOwnProperty(metaDataObject[variable])) {
-                                    barData[variable][query][metaDataObject[variable]] = 0;
-                                }
-                                if (qSet.has(metaDataObject.oid)) {
-                                    barData[variable][query][metaDataObject[variable]] += 1;
+                        for (let variable of barData.variables['categorical']) {
+                            const varData = metaDataBuffer.data[variable];
+                            const N = varData.length;
+                            for (var i=0; i<N; ++i) {
+                                if (qSet.has(oids[i])) {
+                                    const value = varData[i];
+                                    if (barData[variable][query].hasOwnProperty(value)) {
+                                        barData[variable][query][value] += 1
+                                    } else {
+                                        barData[variable][query][value] = 0
+                                    }
                                 }
                             }
                         }
@@ -652,15 +657,7 @@
                     for (let q of QUERIES) {
                         const qSet = new Set(data.data[q].pass);
                         for (let v of barData.variables['numerical']) {
-                            barData[v][q] = {x: [], y: []};
-                            for (let o of metaDataBuffer.objects) {
-                                if (o.hasOwnProperty(v)) {
-                                    if(qSet.has(o.oid)) {
-                                        barData[v][q].x.push(o.oid);
-                                        barData[v][q].y.push(o[v]);
-                                    }
-                                }
-                            }
+                            barData[v][q] = {x: oids, y: metaDataBuffer.data[v]};
                         }
                     }
 
@@ -687,17 +684,10 @@
                         barData.variables[variableKind].push(artificialVarName);
                         barData[artificialVarName] = {};
                         for (let q of QUERIES) {
-                            const qSet = new Set(data.data[q].pass);
-                            barData[artificialVarName][q] = {x: [], y: []};
-                            for (let o of metaDataBuffer.objects) {
-                                if(qSet.has(o.oid)) {
-                                    const point = f(o);
-                                    if (point != undefined) {
-                                        barData[artificialVarName][q].x.push(point.x);
-                                        barData[artificialVarName][q].y.push(point.y);
-                                    }
-                                }
-                            }
+                            barData[artificialVarName][q] = {
+                                x: metaDataBuffer.data.oid,
+                                y: data.data[q].pass.map(f)
+                            };
                         }
                     }
 
