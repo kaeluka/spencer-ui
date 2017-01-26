@@ -46,6 +46,10 @@
         }
 
         function insertCallIntoThreadHistory(thdHistory, call) {
+            if (call.callsite === "HashMap.java:1461") {
+                console.log("got it");
+                debugger;
+            }
             let N = thdHistory.length;
             if (N == 0) {
                 call['innerHistory'] = [];
@@ -70,6 +74,10 @@
         }
 
         function insertUseIntoThreadHistory(thdHistory, use) {
+            if (use.start == 169) {
+                console.log("got it");
+                debugger;
+            }
             let call = thdHistory.find(function (call) {
                 return call.type === "call" && call.start < use.start && call.end > use.start;
             });
