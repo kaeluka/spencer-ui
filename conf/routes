@@ -10,6 +10,8 @@ GET     /json/select/:dbname/:q               controllers.QueryController.json_s
 GET     /json/meta/:dbname                    controllers.QueryController.json_meta(dbname, q = "Obj()")
 GET     /json/meta/:dbname/:q                 controllers.QueryController.json_meta(dbname, q)
 
+GET     /json/meta2/:dbname/:q                 controllers.QueryController.json_meta2(dbname, q)
+
 GET     /query/:dbname/*q                     controllers.QueryController.query(dbname, q)
 
 GET     /perobj/                              controllers.PerObjController.perobj(n = "test", qs = "Obj()")
