@@ -2,6 +2,9 @@
 @(benchmarks: Seq[BenchmarkMetaInfo])
 @main("Benchmarks") {
     <h1>Benchmarks</h1>
+
+    Benchmarks that are currently loaded in the data base.
+
     <table>
         <thead>
             <tr>
@@ -9,6 +12,7 @@
                 <th># Objects</th>
                 <th>Upload Date</th>
                 <th>Comment</th>
+                <th>Start querying</th>
             </tr>
 
         </thead>
@@ -19,6 +23,7 @@
                 <td>@(benchmark.objCount)</td>
                 <td>@(benchmark.date)</td>
                 <td>@(benchmark.comment)</td>
+                <td><a href="@(routes.QueryController.query(benchmark.name, "Obj()"))"><span class="code">@(benchmark.name)/Obj()</span></a></td>
             </tr>
         }
         </tbody>

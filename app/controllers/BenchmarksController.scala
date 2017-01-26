@@ -39,9 +39,7 @@ class BenchmarksController @Inject()(lifecycle: ApplicationLifecycle,
       2.hours.toSeconds.asInstanceOf[Int])
     {
       Action { implicit req =>
-        print("getting benchmarks.. ")
         val benchmarks = PostgresSpencerDBs.getAvailableBenchmarks()
-        println("done")
         Ok(views.html.benchmarks(benchmarks))
       }
     }
