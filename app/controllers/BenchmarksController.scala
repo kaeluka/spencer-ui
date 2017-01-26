@@ -28,7 +28,7 @@ class BenchmarksController @Inject()(lifecycle: ApplicationLifecycle,
     {
       Action { implicit req =>
         val benchmarks = PostgresSpencerDBs.getAvailableBenchmarks()
-        Ok(toJson(benchmarks))
+        Ok(toJson(benchmarks.map(_.name)))
       }
     }
   }
@@ -39,8 +39,18 @@ class BenchmarksController @Inject()(lifecycle: ApplicationLifecycle,
       2.hours.toSeconds.asInstanceOf[Int])
     {
       Action { implicit req =>
+        print("getting benchmarks.. ")
         val benchmarks = PostgresSpencerDBs.getAvailableBenchmarks()
-        Ok(s"I could find the following benchmarks: ${benchmarks.mkString(", ")}")
+        println("done")
+        Ok(views.html.benchmarks(benchmarks))
+      }
+    }
+  }
+
+  def benchmark(dbname: String) = {
+    {
+      Action { implicit req =>
+        NotAcceptable("Not implemented yet")
       }
     }
   }

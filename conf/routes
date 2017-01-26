@@ -27,7 +27,8 @@ GET     /apropos/:dbname/:oid                 controllers.AproposController.apro
 GET     /source/:dbname/:klass                controllers.SourceCodeController.query(dbname, klass)
 
 GET     /benchmarks                           controllers.BenchmarksController.benchmarks()
-GET     /json/benchmarks                       controllers.BenchmarksController.json_benchmarks()
+GET     /benchmarks/:dbname                   controllers.BenchmarksController.benchmark(dbname)
+GET     /json/benchmarks                      controllers.BenchmarksController.json_benchmarks()
 
 GET     /debug                                controllers.DebugController.debug
 GET     /debug/clearCaches/:dbname            controllers.DebugController.clearCaches(dbname)
