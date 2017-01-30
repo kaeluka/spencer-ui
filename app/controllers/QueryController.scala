@@ -25,7 +25,7 @@ class QueryController @Inject()(lifecycle: ApplicationLifecycle,
 
   def json_meta2(dbname: String, q: String = "Obj()") = {
     cached(
-      {_: RequestHeader => s"json/$q"},
+      {_: RequestHeader => s"json_meta2/$q"},
       2.hours.toSeconds.asInstanceOf[Int])
     {
       Action { implicit req =>
@@ -33,7 +33,7 @@ class QueryController @Inject()(lifecycle: ApplicationLifecycle,
         val cacheDuration = 3600
         QueryParser.parseObjQuery(q) match {
           case Right(qObj) =>
-            val metaQuery: WithMetaInformation = WithMetaInformation(qObj)
+            val metaQuery: WithMetaInformation = WithMetaInformation(qObj.snapshotted())
             println("variables: " + metaQuery.availableVariables)
             val objs = metaQuery.analyse.collect()
             val oid = new Array[Long](objs.length)
