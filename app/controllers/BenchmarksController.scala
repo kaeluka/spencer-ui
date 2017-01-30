@@ -23,7 +23,7 @@ class BenchmarksController @Inject()(lifecycle: ApplicationLifecycle,
 
   def json_benchmarks() = {
     cached(
-      {_: RequestHeader => s"benchmarks"},
+      {_: RequestHeader => s"json_benchmarks"},
       2.hours.toSeconds.asInstanceOf[Int])
     {
       Action { implicit req =>
