@@ -9,15 +9,19 @@
         <h2>Meta Information</h2>
         <table>
             <tr>
+                <td>Name</td>
                 <td><a href="@(routes.BenchmarksController.benchmark(benchmark.name))">@(benchmark.name)</a></td>
             </tr>
             <tr>
+                <td>Number of objects</td>
                 <td>@(benchmark.objCount)</td>
             </tr>
             <tr>
+                <td>Upload date</td>
                 <td>@(benchmark.date)</td>
             </tr>
             <tr>
+                <td>Comment</td>
                 <td>@(benchmark.comment)</td>
             </tr>
         </table>
