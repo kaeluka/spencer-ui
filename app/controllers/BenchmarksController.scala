@@ -48,7 +48,12 @@ class BenchmarksController @Inject()(lifecycle: ApplicationLifecycle,
   def benchmark(dbname: String) = {
     {
       Action { implicit req =>
-        NotAcceptable("Not implemented yet")
+        val benchmarks = PostgresSpencerDBs.getAvailableBenchmarks().filter(_.name == dbname)
+        benchmarks.length match {
+          case 0 => NotFound(s"benchmark $dbname does not exist.")
+          case 1 => Ok(views.html.benchmark(benchmarks.head))
+          case n => InternalServerError(s"BUG: found $n benchmarks with name $dbname")
+        }
       }
     }
   }

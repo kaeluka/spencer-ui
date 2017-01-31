@@ -1,0 +1,67 @@
+@import com.github.kaeluka.spencer.analysis._
+@(benchmark: BenchmarkMetaInfo)
+@main("Benchmarks") {
+    <h1>Benchmarks</h1>
+
+    <div class="text">
+
+        <h1>Benchmark <span class="code">@(benchmark.name)</span></h1>
+        <h2>Meta Information</h2>
+        <table>
+            <tr>
+                <td><a href="@(routes.BenchmarksController.benchmark(benchmark.name))">@(benchmark.name)</a></td>
+            </tr>
+            <tr>
+                <td>@(benchmark.objCount)</td>
+            </tr>
+            <tr>
+                <td>@(benchmark.date)</td>
+            </tr>
+            <tr>
+                <td>@(benchmark.comment)</td>
+            </tr>
+        </table>
+
+        <h2>Controls</h2>
+
+        <table>
+            <tr>
+                <td>
+                    <a onclick="cacheBenchmarks()" href="javascript:void(0)">Cache primitive queries</a>
+                </td>
+                <td>
+                    <span id="cachelog">0 loaded</span>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+
+    <script>
+        function cacheBenchmarks() {
+            const log = document.getElementById("cachelog");
+            var cacheCount = 0;
+            const totalQueriesCount = @(QueryParser.primitiveQueries().length);
+            const ALL_PRIMITIVE_QUERIES = [];
+            @for(q <- QueryParser.primitiveQueries().map(_.toString)) {
+            {
+              const query = "@q";
+              ALL_PRIMITIVE_QUERIES.push(query);
+              const req = new XMLHttpRequest();
+              req.open("GET", '@routes.QueryController.json_select(benchmark.name, q)');
+              req.onload = (e) => {
+                  cacheCount++;
+                  if (cacheCount < totalQueriesCount) {
+                      log.innerHTML = cacheCount + "/" + totalQueriesCount + " loaded";
+                  } else {
+                      log.innerHTML = "<i class='fa fa-check'></i>"
+                  }
+              };
+
+              req.send(null);
+            }
+            }
+        }
+    </script>
+
+}

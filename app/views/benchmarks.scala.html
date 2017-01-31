@@ -3,29 +3,29 @@
 @main("Benchmarks") {
     <h1>Benchmarks</h1>
 
-    <p>Benchmarks that are currently loaded in the database.</p>
+    <div class="text">
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th># Objects</th>
+                    <th>Upload Date</th>
+                    <th>Comment</th>
+                    <th>Start querying</th>
+                </tr>
 
-    <table>
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th># Objects</th>
-                <th>Upload Date</th>
-                <th>Comment</th>
-                <th>Start querying</th>
+            </thead>
+            <tbody>
+            @for(benchmark <- benchmarks) {
+                <tr>
+                    <td><a href="@(routes.BenchmarksController.benchmark(benchmark.name))">@(benchmark.name)</a></td>
+                    <td>@(benchmark.objCount)</td>
+                    <td>@(benchmark.date)</td>
+                    <td>@(benchmark.comment)</td>
+                    <td><a href="@(routes.QueryController.query(benchmark.name, "Obj()"))"><span class="code">@(benchmark.name)/Obj()</span></a></td>
             </tr>
-
-        </thead>
-        <tbody>
-        @for(benchmark <- benchmarks) {
-            <tr>
-                <td><a href="@(routes.BenchmarksController.benchmark(benchmark.name))">@(benchmark.name)</a></td>
-                <td>@(benchmark.objCount)</td>
-                <td>@(benchmark.date)</td>
-                <td>@(benchmark.comment)</td>
-                <td><a href="@(routes.QueryController.query(benchmark.name, "Obj()"))"><span class="code">@(benchmark.name)/Obj()</span></a></td>
-            </tr>
-        }
-        </tbody>
-    </table>
+            }
+            </tbody>
+        </table>
+    </div>
 }
