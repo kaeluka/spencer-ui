@@ -245,11 +245,7 @@
 
                     {
                         const req = new XMLHttpRequest();
-                        if (QUERIES.length > 1) {
-                            req.open("GET", '@routes.QueryController.json_meta2(dbname, queries.mkString("Or(", " ", ")"))');
-                        } else {
-                            req.open("GET", '@routes.QueryController.json_meta2(dbname, queries(0).toString)');
-                        }
+                        req.open("GET", '@routes.QueryController.json_meta2(dbname, "Obj()")');
                         req.onload = function (e) {
                             console.log({req, e});
                             metaDataBuffer = JSON.parse(req.responseText);

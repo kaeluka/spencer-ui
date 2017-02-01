@@ -1,1 +1,1 @@
-sudo activator -Dspark.executor.memory=12g -J-Xmx16g "run 80"
+activator -Dspark.executor.memory=8g -J-Xmx32g "run 80"
