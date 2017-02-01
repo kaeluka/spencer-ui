@@ -1,6 +1,6 @@
 @import com.github.kaeluka.spencer.analysis._
 @(benchmarks: Seq[BenchmarkMetaInfo])
-@main("Benchmarks") {
+@main("Benchmarks Overview") {
     <h1>Benchmarks</h1>
 
     <div class="text">
@@ -16,7 +16,7 @@
 
             </thead>
             <tbody>
-            @for(benchmark <- benchmarks) {
+            @for(benchmark <- benchmarks.sortBy(_.objCount)) {
                 <tr>
                     <td><a href="@(routes.BenchmarksController.benchmark(benchmark.name))">@(benchmark.name)</a></td>
                     <td>@(benchmark.objCount)</td>

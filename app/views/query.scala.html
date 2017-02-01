@@ -33,45 +33,45 @@
 
         function focusQueryHandler(i) {
             const newQueries = projectFocusQueries(QUERIES, i);
-            window.location.href = "http://spencer-t.racing/query/"+DBNAME+"/"+newQueries;
+            window.location.href = "/query/"+DBNAME+"/"+newQueries;
         }
         function negateQueryHandler(i) {
             QUERIES[i] = "Not("+QUERIES[i]+")";
-            window.location.href = "http://spencer-t.racing/query/"+DBNAME+"/"+QUERIES.join("/");
+            window.location.href = "/query/"+DBNAME+"/"+QUERIES.join("/");
         }
         function hideQueryHandler(i) {
             const newQueries = projectHideQueries(QUERIES, i);
-            window.location.href = "http://spencer-t.racing/query/"+DBNAME+"/"+newQueries;
+            window.location.href = "/query/"+DBNAME+"/"+newQueries;
         }
         function splitQueryHandler(i) {
             if (QUERIES.length == 1) {
-                window.location.href = "http://spencer-t.racing/query/"+DBNAME+"/"+QUERIES[0]+"/Not("+QUERIES[0]+")";
+                window.location.href = "/query/"+DBNAME+"/"+QUERIES[0]+"/Not("+QUERIES[0]+")";
             } else {
                 const newQueriesFocused = projectFocusQueries(QUERIES, i);
                 const newQueriesHidden  = projectHideQueries(QUERIES, i);
-                window.location.href = "http://spencer-t.racing/query/"+DBNAME+"/"+newQueriesFocused+"/"+newQueriesHidden;
+                window.location.href = "/query/"+DBNAME+"/"+newQueriesFocused+"/"+newQueriesHidden;
             }
         }
         function moveQueryUpHandler(i) {
             const Qi = QUERIES[i];
             QUERIES.splice(i,1);
             QUERIES.splice(i-1,0, Qi);
-            window.location.href = "http://spencer-t.racing/query/"+DBNAME+"/"+QUERIES.join("/");
+            window.location.href = "/query/"+DBNAME+"/"+QUERIES.join("/");
         }
         function moveQueryDownHandler(i) {
             const Qi = QUERIES[i];
             QUERIES.splice(i,1);
             QUERIES.splice(i+1,0, Qi);
-            window.location.href = "http://spencer-t.racing/query/"+DBNAME+"/"+QUERIES.join("/");
+            window.location.href = "/query/"+DBNAME+"/"+QUERIES.join("/");
         }
         function removeQueryHandler(i) {
             //remove the query from QUERIES:
             QUERIES.splice(i, 1);
-            window.location.href = "http://spencer-t.racing/query/"+DBNAME+"/"+QUERIES.join("/");
+            window.location.href = "/query/"+DBNAME+"/"+QUERIES.join("/");
         }
         function wrapQueryHandler(i, hoq) {
             QUERIES[i] = hoq+"("+QUERIES[i]+")";
-            window.location.href = "http://spencer-t.racing/query/"+DBNAME+"/"+QUERIES.join("/");
+            window.location.href = "/query/"+DBNAME+"/"+QUERIES.join("/");
         }
     </script>
 
@@ -83,20 +83,20 @@
             <td><i id="spinner-@i" class="fa fa-spinner fa-spin" aria-hidden="true"></i></td>
             <td><span class="query">@q</span> </td>
             <td> <a onclick="wrapQueryHandler(@i, 'Not')" href="javascript:void(0);" title="Focus"><i class="fa">&not;</i></td>
-            <td> <a onclick="wrapQueryHandler(@i, 'RefersTo')" href="javascript:void(0);" title="RefersTo(@q)"><i class="fa fa-arrow-right"><i class="fa fa-circle"></i></i></td>
-            <td> <a onclick="wrapQueryHandler(@i, 'HeapRefersTo')" href="javascript:void(0);" title="HeapRefersTo(@q)"><i class="fa fa-long-arrow-right"><i class="fa fa-circle"></i></i></td>
-            <td> <a onclick="wrapQueryHandler(@i, 'CanReach')" href="javascript:void(0);" title="CanReach(@q)"><i class="fa fa-arrow-right"><i class="fa fa-arrow-right"></i><i class="fa fa-circle"></i></i></td>
-            <td> <a onclick="wrapQueryHandler(@i, 'CanHeapReach')" href="javascript:void(0);" title="CanHeapReach(@q)"><i class="fa fa-long-arrow-right"><i class="fa fa-long-arrow-right"></i><i class="fa fa-circle"></i></i></td>
-            <td> <a onclick="wrapQueryHandler(@i, 'ReferredFrom')" href="javascript:void(0);" title="ReferredFrom(@q)"><i class="fa fa-circle"><i class="fa fa-arrow-right"></i></i></td>
-            <td> <a onclick="wrapQueryHandler(@i, 'HeapReferredFrom')" href="javascript:void(0);" title="HeapReferredFrom(@q)"><i class="fa fa-circle"><i class="fa fa-long-arrow-right"></i></i></td>
-            <td> <a onclick="wrapQueryHandler(@i, 'ReachableFrom')" href="javascript:void(0);" title="ReachableFrom(@q)"><i class="fa fa-circle"><i class="fa fa-arrow-right"></i><i class="fa fa-arrow-right"></i></i></td>
-            <td> <a onclick="wrapQueryHandler(@i, 'HeapReachableFrom')" href="javascript:void(0);" title="HeapReachableFrom(@q)"><i class="fa fa-circle"><i class="fa fa-long-arrow-right"></i><i class="fa fa-long-arrow-right"></i></i></td>
+            <td> <a onclick="wrapQueryHandler(@i, 'RefersTo')" href="javascript:void(0);" title="RefersTo(@q)"><span style="white-space: nowrap"><i class="fa fa-arrow-right"><i class="fa fa-circle"></i></i></span></a></td>
+            <td> <a onclick="wrapQueryHandler(@i, 'HeapRefersTo')" href="javascript:void(0);" title="HeapRefersTo(@q)"><span style="white-space: nowrap"><i class="fa fa-long-arrow-right"><i class="fa fa-circle"></i></i></span></a></td>
+            <td> <a onclick="wrapQueryHandler(@i, 'CanReach')" href="javascript:void(0);" title="CanReach(@q)"><span style="white-space: nowrap"><i class="fa fa-arrow-right"><i class="fa fa-arrow-right"></i><i class="fa fa-circle"></i></i></span> </a></td>
+            <td> <a onclick="wrapQueryHandler(@i, 'CanHeapReach')" href="javascript:void(0);" title="CanHeapReach(@q)"><span style="white-space: nowrap"><i class="fa fa-long-arrow-right"><i class="fa fa-long-arrow-right"></i><i class="fa fa-circle"></i></i></span></a></td>
+            <td> <a onclick="wrapQueryHandler(@i, 'ReferredFrom')" href="javascript:void(0);" title="ReferredFrom(@q)"><span style="white-space: nowrap"><i class="fa fa-circle"><i class="fa fa-arrow-right"></i></i></span> </a></td>
+            <td> <a onclick="wrapQueryHandler(@i, 'HeapReferredFrom')" href="javascript:void(0);" title="HeapReferredFrom(@q)"><span style="white-space: nowrap"><i class="fa fa-circle"><i class="fa fa-long-arrow-right"></i></i></span></a></td>
+            <td> <a onclick="wrapQueryHandler(@i, 'ReachableFrom')" href="javascript:void(0);" title="ReachableFrom(@q)"><span style="white-space: nowrap"><i class="fa fa-circle"><i class="fa fa-arrow-right"></i><i class="fa fa-arrow-right"></i></i></span></a></td>
+            <td> <a onclick="wrapQueryHandler(@i, 'HeapReachableFrom')" href="javascript:void(0);" title="HeapReachableFrom(@q)"><span style="white-space: nowrap"><i class="fa fa-circle"><i class="fa fa-long-arrow-right"></i><i class="fa fa-long-arrow-right"></i></i></span> </a></td>
             @if(queries.length > 1) {
             <td><a onclick="focusQueryHandler(@i)" href="javascript:void(0);" title="Focus"><i class="fa fa-crosshairs"></i></td>
             <td><a onclick="hideQueryHandler(@i)"  href="javascript:void(0);" title="Hide"> <i class="fa fa-ban"></i></a></td>
             }
             <td>
-                <a onclick="splitQueryHandler(@i)" href="javascript:void(0);" title="Split"><i class="fa fa-circle">/</i><i class="fa fa-circle-o"></i></a>
+                <a onclick="splitQueryHandler(@i)" href="javascript:void(0);" title="Split"><span style="white-space: nowrap"><i class="fa fa-circle">/</i><i class="fa fa-circle-o"></i></span> </a>
             </td>
             @if(queries.size > 1) {
             <td>
