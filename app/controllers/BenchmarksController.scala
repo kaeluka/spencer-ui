@@ -40,7 +40,7 @@ class BenchmarksController @Inject()(lifecycle: ApplicationLifecycle,
     {
       Action { implicit req =>
         val benchmarks = PostgresSpencerDBs.getAvailableBenchmarks()
-        Ok(views.html.benchmarks(benchmarks))
+        Ok(views.html.datasets(benchmarks))
       }
     }
   }
