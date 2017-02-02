@@ -1,10 +1,32 @@
 
+div.site-nav-wrapper {
+    border-bottom: 1px #d6d6d6 solid;
+}
+nav.site-nav {
+    padding-top: 2em;
+    height: 1em;
+    padding-bottom: 2em;
+    float: right;
+}
+
+nav.site-nav a {
+    font-weight: bold;
+    margin-left: 1em;
+    margin-right: 1em;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    color: #c2391d;
+}
+
+img.logo {
+    height: 4em;
+}
+
 html, body {
     height: 100%;
 }
 
 /*h1, h2, h3, h4, h5, h6, p, blockquote, pre, ul, ol, dl, figure, .highlight { margin-bottom: 0px; }*/
-h1, h2, h3, h4, h5, h6 { font-weight: 400; font-family: Arial, "Helvetica Neue", Helvetica, Arial, sans-serif; text-align: center; }
+h1, h2, h3, h4, h5, h6 { font-weight: 400; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; text-align: center; }
 
 span.code {
     font-family: 'DejaVu Sans Mono', monospace;
