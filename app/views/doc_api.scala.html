@@ -1,0 +1,64 @@
+@import com.github.kaeluka.spencer.analysis.QueryParser
+@import com.github.kaeluka.spencer.analysis.SpencerDB
+@import org.apache.spark.sql.functions._
+
+@main("Spencer > Documentation > API") {
+
+    <div class="text">
+
+        <h2>JSON API</h2>
+
+        <p>
+            Spencer's selections are not Turing complete. This means that some
+            you will never be able to use Spencer for every single use case.
+
+            For special use cases, Spencer provides an API that lets you write
+            your own analysis on top of Spencer's queries.
+
+            The API knows three commands: getting all available data sets,
+            selecting objects and getting meta information. If you build a query
+            using Spencer's UI, you will always find links to the API calls that
+            will give you the relevant data at the bottom of each page, for
+            instance, see: <a target="_blank" href="/query/test/ImmutableObj()">the query for immutable objects</a>.
+
+            Features that the API does not (yet!) expose are a way to access the
+                class files that were running in a benchmark and a way to
+                retrieve all events involving one or several objects,
+            like on the /apropos pages, for example: <a href="/apropos/test/36757">/apropos/test/36757</a>
+        </p>
+
+
+        <h3>Selecting Objects</h3>
+
+        <p>
+            In order to run a selection query using the JSON API, access this
+            URL (note that spaces are escaped using the control sequence
+                <span class="code">%20</span>):
+        </p>
+
+        <p>
+            <a target="_blank" href="http://www.spencer-t.racing/json/select/test/Or(ImmutableObj()%20HeapUniqueObj())">http://www.spencer-t.racing/json/select/test/Or(ImmutableObj()%20HeapUniqueObj())</a>
+        </p>
+
+        <p>
+            You can also use tools like <span class="code">curl</span> (on unix)
+            to get the results in your command line, run:
+        </p>
+
+        <p>
+            <span class="code">curl "http://www.spencer-t.racing/json/select/test/Or(ImmutableObj()%20HeapUniqueObj())"</span>
+        </p>
+
+        <h3>Getting Meta Information</h3>
+
+        <p>
+            Selection only gives you sets of objects, but it tells you nothing about
+            the classes, life times, ... of these objects. This is what the meta
+            information is for. Use the URL
+        </p>
+
+        <p>
+            <a target="_blank" href="/json/meta/test/Or(ImmutableObj()%20HeapUniqueObj())">http://www.spencer-t.racing/json/meta/test/Or(ImmutableObj()%20HeapUniqueObj())</a>
+        </p>
+    </div>
+}

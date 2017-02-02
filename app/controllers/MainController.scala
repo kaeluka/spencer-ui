@@ -35,10 +35,22 @@ class MainController @Inject()(lifecycle: ApplicationLifecycle,
     this.dbMap(name)
   }
 
-  def index = cached("index_page") {
+  def index = cached("/index") {
     Action { implicit request =>
       implicit val db = getDB("test")
       Ok(views.html.index())
+    }
+  }
+
+  def doc = cached("/doc") {
+    Action { implicit request =>
+      Ok(views.html.doc_index())
+    }
+  }
+
+  def doc_api = cached("/doc/api") {
+    Action { implicit request =>
+      Ok(views.html.doc_api())
     }
   }
 

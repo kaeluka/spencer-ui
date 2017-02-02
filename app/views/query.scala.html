@@ -988,7 +988,7 @@
 
     <script>
         let allObjsSelection = "@(routes.QueryController.json_select(dbname, "Obj()"))";
-        let allObjsMeta = "@(routes.QueryController.json_meta(dbname, "Obj()"))";
+        let allObjsMeta = "@(routes.QueryController.json_meta2(dbname, "Obj()"))";
         d3.select("#jsonLinks")
                 .selectAll("li")
                 .data(QUERIES)

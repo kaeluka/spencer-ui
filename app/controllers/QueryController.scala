@@ -81,45 +81,6 @@ class QueryController @Inject()(lifecycle: ApplicationLifecycle,
     }
   }
 
-  def json_meta(dbname: String, q: String = "Obj()") =
-//    cached(
-//    {_: RequestHeader => s"json/$q"},
-//    6.hours.toSeconds.asInstanceOf[Int])
-    {
-    Action { implicit req =>
-      implicit val data = mainC.getDB(dbname)
-      val cacheDuration = 3600
-      QueryParser.parseObjQuery(q) match {
-        case Right(qObj) =>
-          val metaQuery: WithMetaInformation = WithMetaInformation(qObj)
-          println("variables: "+metaQuery.availableVariables)
-          val objs = metaQuery.analyse.collect()
-          Ok(Json.obj(
-            "query"   -> q,
-            "dbname"  -> dbname,
-            "variables" -> toJson(metaQuery.availableVariables),
-            "objects" -> Json.toJson(objs.map(
-              o => Json.toJson(
-                Map(
-                  "oid"                -> Some(toJson(o.oid)),
-                  "allocationSite"     -> o.allocationSite.map(toJson(_)),
-                  "klass"              -> o.klass.map(toJson(_)),
-                  "firstUsage"         -> Some(toJson(o.firstUsage)),
-                  "lastUsage"          -> Some(toJson(o.lastUsage)),
-                  "thread"             -> o.thread.map(toJson(_)),
-                  "numFieldWrites"     -> Some(toJson(o.numFieldWrites)),
-                  "numFieldReads"      -> Some(toJson(o.numFieldReads)),
-                  "numCalls"           -> Some(toJson(o.numCalls))
-                ).filter(_._2.isDefined)
-              )
-            ))
-          )).withHeaders((s"Cache-Control", s"public, max-age=$cacheDuration"))
-        case Left(_) =>
-          NotAcceptable("could not parse the query '" + q)
-      }
-    }
-  }
-
   def json_select(dbname: String, q: String) =
 //    cached(
 //      {_: RequestHeader => s"json/$q"},

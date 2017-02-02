@@ -5,12 +5,14 @@
 # An example controller showing a sample home page
 GET     /                                     controllers.MainController.index
 GET     /playground                           controllers.MainController.playground
+GET     /doc                                  controllers.MainController.doc
+GET     /doc/api                              controllers.MainController.doc_api
+
+GET     /assets/*file                         controllers.Assets.at(path="/public", file)
 
 GET     /json/select/:dbname/:q               controllers.QueryController.json_select(dbname, q)
-GET     /json/meta/:dbname                    controllers.QueryController.json_meta(dbname, q = "Obj()")
-GET     /json/meta/:dbname/:q                 controllers.QueryController.json_meta(dbname, q)
-
-GET     /json/meta2/:dbname/:q                 controllers.QueryController.json_meta2(dbname, q)
+GET     /json/meta/:dbname/:q                controllers.QueryController.json_meta2(dbname, q)
+GET     /json/benchmarks                      controllers.BenchmarksController.json_benchmarks()
 
 GET     /query/:dbname/*q                     controllers.QueryController.query(dbname, q)
 
@@ -28,7 +30,6 @@ GET     /source/:dbname/:klass                controllers.SourceCodeController.q
 
 GET     /benchmarks                           controllers.BenchmarksController.benchmarks()
 GET     /benchmarks/:dbname                   controllers.BenchmarksController.benchmark(dbname)
-GET     /json/benchmarks                      controllers.BenchmarksController.json_benchmarks()
 
 GET     /debug                                controllers.DebugController.debug
 GET     /debug/clearCaches/:dbname            controllers.DebugController.clearCaches(dbname)
