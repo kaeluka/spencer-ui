@@ -6,6 +6,7 @@ import javax.inject._
 import com.github.kaeluka.spencer.analysis.SpencerGraphImplicits._
 import com.github.kaeluka.spencer.analysis._
 import org.apache.spark.graphx.VertexId
+import org.apache.spark.sql.DataFrame
 import play.api.cache.Cached
 import play.api.i18n.MessagesApi
 import play.api.inject.ApplicationLifecycle
@@ -35,27 +36,32 @@ class QueryController @Inject()(lifecycle: ApplicationLifecycle,
           case Right(qObj) =>
             val metaQuery: WithMetaInformation = WithMetaInformation(qObj.snapshotted())
             println("variables: " + metaQuery.availableVariables)
-            val objs = metaQuery.analyse.collect()
-            val oid = new Array[Long](objs.length)
-            val allocationSite = new Array[String](objs.length)
-            val klass = new Array[String](objs.length)
-            val firstUsage = new Array[Long](objs.length)
-            val lastUsage = new Array[Long](objs.length)
-            val thread = new Array[String](objs.length)
-            val numFieldWrites = new Array[Long](objs.length)
-            val numFieldReads = new Array[Long](objs.length)
-            val numCalls = new Array[Long](objs.length)
+            val objs: DataFrame = metaQuery.analyse
+            val N = objs.count().asInstanceOf[Int]
+            val oid = new Array[Long](N)
+            val allocationSite = new Array[String](N)
+            val klass = new Array[String](N)
+            val firstUsage = new Array[Long](N)
+            val lastUsage = new Array[Long](N)
+            val thread = new Array[String](N)
+            val numFieldWrites = new Array[Long](N)
+            val numFieldReads = new Array[Long](N)
+            val numCalls = new Array[Long](N)
             var i = 0
-            while (i < objs.length) {
-              oid(i) = objs(i).oid
-              allocationSite(i) = objs(i).allocationSite.getOrElse("undefined")
-              klass(i) = objs(i).klass.getOrElse("undefined")
-              firstUsage(i) = objs(i).firstUsage
-              lastUsage(i) = objs(i).lastUsage
-              thread(i) = objs(i).thread.getOrElse("undefined")
-              numFieldWrites(i) = objs(i).numFieldWrites
-              numFieldReads(i) = objs(i).numFieldReads
-              numCalls(i) = objs(i).numCalls
+            val it = objs.toLocalIterator()
+            while (it.hasNext) {
+              val nxt = it.next()
+              oid(i) = nxt.getAs[java.lang.Long]("id")
+              allocationSite(i) =
+                Option(nxt.getAs[String]("allocationsitefile")).getOrElse("undefined") +
+                  Option(nxt.getAs[java.lang.Long]("allocationsiteline")).getOrElse("undefined")
+              klass(i) = Option(nxt.getAs[String]("klass")).getOrElse("undefined")
+              firstUsage(i) = nxt.getAs[Long]("firstusage") // objs(i).firstUsage
+              lastUsage(i) = nxt.getAs[Long]("lastusage") // objs(i).lastUsage
+              thread(i) = nxt.getAs[String]("thread") // objs(i).thread.getOrElse("undefined")
+              numFieldWrites(i) = 0 // objs(i).numFieldWrites
+              numFieldReads(i) =  0
+              numCalls(i) = nxt.getAs[Long]("numCalls")
               i += 1
             }
             Ok(Json.obj(
