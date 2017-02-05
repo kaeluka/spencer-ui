@@ -44,8 +44,8 @@ class QueryController @Inject()(lifecycle: ApplicationLifecycle,
             val firstUsage = new Array[Long](N)
             val lastUsage = new Array[Long](N)
             val thread = new Array[String](N)
-            val numFieldWrites = new Array[Long](N)
-            val numFieldReads = new Array[Long](N)
+//            val numFieldWrites = new Array[Long](N)
+//            val numFieldReads = new Array[Long](N)
             val numCalls = new Array[Long](N)
             var i = 0
             val it = objs.toLocalIterator()
@@ -59,8 +59,8 @@ class QueryController @Inject()(lifecycle: ApplicationLifecycle,
               firstUsage(i) = nxt.getAs[Long]("firstusage") // objs(i).firstUsage
               lastUsage(i) = nxt.getAs[Long]("lastusage") // objs(i).lastUsage
               thread(i) = nxt.getAs[String]("thread") // objs(i).thread.getOrElse("undefined")
-              numFieldWrites(i) = 0 // objs(i).numFieldWrites
-              numFieldReads(i) =  0
+//              numFieldWrites(i) = 0 // objs(i).numFieldWrites
+//              numFieldReads(i) =  0
               numCalls(i) = nxt.getAs[Long]("numCalls")
               i += 1
             }
@@ -75,8 +75,8 @@ class QueryController @Inject()(lifecycle: ApplicationLifecycle,
                 "firstUsage" -> toJson(firstUsage),
                 "lastUsage" -> toJson(lastUsage),
                 "thread" -> toJson(thread),
-                "numFieldWrites" -> toJson(numFieldWrites),
-                "numFieldReads" -> toJson(numFieldReads),
+//                "numFieldWrites" -> toJson(numFieldWrites),
+//                "numFieldReads" -> toJson(numFieldReads),
                 "numCalls" -> toJson(numCalls)
               )
             ))
