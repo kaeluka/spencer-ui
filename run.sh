@@ -1,1 +1,1 @@
-activator -Dspark.executor.memory=8g -J-Xmx32g "run 80"
+activator -Dspark.executor.memory=8g -Dspark.driver.memory=8g -J-Xmx8g "run 80"

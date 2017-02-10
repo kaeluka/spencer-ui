@@ -41,8 +41,8 @@ class QueryController @Inject()(lifecycle: ApplicationLifecycle,
             val oid = new Array[Long](N)
             val allocationSite = new Array[String](N)
             val klass = new Array[String](N)
-            val firstUsage = new Array[Long](N)
-            val lastUsage = new Array[Long](N)
+            val firstusage = new Array[Long](N)
+            val lastusage = new Array[Long](N)
             val thread = new Array[String](N)
 //            val numFieldWrites = new Array[Long](N)
 //            val numFieldReads = new Array[Long](N)
@@ -56,8 +56,8 @@ class QueryController @Inject()(lifecycle: ApplicationLifecycle,
                 Option(nxt.getAs[String]("allocationsitefile")).getOrElse("undefined") +
                   Option(nxt.getAs[java.lang.Long]("allocationsiteline")).getOrElse("undefined")
               klass(i) = Option(nxt.getAs[String]("klass")).getOrElse("undefined")
-              firstUsage(i) = nxt.getAs[Long]("firstusage") // objs(i).firstUsage
-              lastUsage(i) = nxt.getAs[Long]("lastusage") // objs(i).lastUsage
+              firstusage(i) = nxt.getAs[Long]("firstusage") // objs(i).firstusage
+              lastusage(i) = nxt.getAs[Long]("lastusage") // objs(i).lastusage
               thread(i) = nxt.getAs[String]("thread") // objs(i).thread.getOrElse("undefined")
 //              numFieldWrites(i) = 0 // objs(i).numFieldWrites
 //              numFieldReads(i) =  0
@@ -72,8 +72,8 @@ class QueryController @Inject()(lifecycle: ApplicationLifecycle,
                 "oid" -> toJson(oid),
                 "allocationSite" -> toJson(allocationSite),
                 "klass" -> toJson(klass),
-                "firstUsage" -> toJson(firstUsage),
-                "lastUsage" -> toJson(lastUsage),
+                "firstusage" -> toJson(firstusage),
+                "lastusage" -> toJson(lastusage),
                 "thread" -> toJson(thread),
 //                "numFieldWrites" -> toJson(numFieldWrites),
 //                "numFieldReads" -> toJson(numFieldReads),
