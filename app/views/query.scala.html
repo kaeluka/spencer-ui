@@ -325,12 +325,14 @@
                                 marker: {
                                   color: COLORS[histData.length]
                                 },
-                                x: data[q].y, // yes, this SHOULD assign y to x -.-
-                                y: data[q].x,
+                                //x: data[q].y, // yes, this SHOULD assign y to x -.-
+                                x: data[q].y,
                                 nbinsx: 30
                             })
                         }
                     }
+
+                    console.log({histData});
 
                     Plotly.newPlot(histDiv, histData, {
                         font: {
@@ -350,7 +352,7 @@
                                 marker: {
                                     color: COLORS[boxData.length]
                                 },
-                                y: data[q].y,
+                                x: data[q].y,
                             })
                         }
                     }
@@ -359,7 +361,7 @@
                         font: {
                             size: 20
                         },
-                        title: "Boxplot",
+                        height: 300,
                         width: 1000,
                     });
                 }
@@ -650,14 +652,22 @@
                     }
 
                     // NUMERICAL DATA
-                    for (let q of QUERIES) {
-                        const qSet = new Set(data.data[q].pass);
-                        for (let v of barData.variables['numerical']) {
-                            barData[v][q] = {x: oids, y: metaDataBuffer.data[v]};
+                    for (let variable of barData.variables['numerical']) {
+                        const varData = metaDataBuffer.data[variable];
+                        const N = varData.length;
+                        for (let q of QUERIES) {
+                            const qSet = new Set(data.data[q].pass);
+                            barData[variable][q] = {x: [], y: []};
+                            for (var i=0; i<N; ++i) {
+                                if (qSet.has(oids[i])) {
+                                    const value = varData[i];
+                                    barData[variable][q].y.push(value);
+                                }
+                            }
                         }
                     }
 
-                    //Sort categorical 
+                    //Sort categorical
                     for (let v of barData.variables.categorical) {
                     }
                     /*for (let v of barData.variables.categorical) {
@@ -680,25 +690,48 @@
                         barData.variables[variableKind].push(artificialVarName);
                         barData[artificialVarName] = {};
                         for (let q of QUERIES) {
+                            const ys = [];
+                            const qSet = new Set(data.data[q].pass);
+                            const varData = metaDataBuffer.data;
+                            const N = allObjs.length;
+                            for (let i=0; i<N; ++i) {
+                                if (qSet.has(oids[i])) {
+                                    const o = {
+                                        oid: oids[i]
+                                    };
+                                    for (let v in metaDataBuffer.variables) {
+                                        if(metaDataBuffer.variables.hasOwnProperty(v)) {
+                                            o[v] = metaDataBuffer.data[v][i];
+                                        }
+                                    }
+                                    const ret = f(o);
+                                    if (ret && ret.x && ret.y) {
+                                        ys.push(ret.y);
+                                    }
+                                }
+                            }
                             barData[artificialVarName][q] = {
-                                x: metaDataBuffer.data.oid,
-                                y: data.data[q].pass.map(f)
+                                y: ys,
                             };
                         }
                     }
 
-                    deriveObjData(barData, "numerical", "lifeTime", function(o) {
+                    deriveObjData(barData, "numerical", "lifetime", function(o) {
                         return {
                             x: o.oid,
-                            y: o.lastUsage - o.firstUsage
+                            y: o.lastusage - o.firstusage
                         };
                     });
 
-                    deriveObjData(barData, "numerical", "log10(lifeTime)", function(o) {
-                        return {
-                            x: o.oid,
-                            y: Math.log10(o.lastUsage - o.firstUsage)
-                        };
+                    deriveObjData(barData, "numerical", "log10(lifetime)", function(o) {
+                        const x = o.oid;
+                        let y = o.lastusage - o.firstusage;
+                        if (y) {
+                            y = Math.log10(y);
+                        } else {
+                            y = undefined;
+                        }
+                        return {x , y};
                     });
 
                     return barData;

@@ -32,15 +32,18 @@
                     <a onclick="cacheBenchmarks()" href="javascript:void(0)">Cache primitive queries</a>
                 </td>
                 <td>
-                    <span id="cachelog">0 loaded</span>
+                    <span id="cachecnt"></span>
                 </td>
             </tr>
         </table>
+        <p>
+            <span id="cachelog"></span>
+        </p>
     </div>
-
 
     <script>
         function cacheBenchmarks() {
+            const cnt = document.getElementById("cachecnt");
             const log = document.getElementById("cachelog");
             var cacheCount = 0;
             const totalQueriesCount = @(QueryParser.primitiveQueries().length);
@@ -51,14 +54,22 @@
               ALL_PRIMITIVE_QUERIES.push(query);
               const req = new XMLHttpRequest();
               req.open("GET", '@routes.QueryController.json_select(benchmark.name, q)');
-              req.onload = (e) => {
+              function increaseCount() {
                   cacheCount++;
                   if (cacheCount < totalQueriesCount) {
-                      log.innerHTML = cacheCount + "/" + totalQueriesCount + " loaded";
+                      cnt.innerHTML = cacheCount + "/" + totalQueriesCount + " loaded";
                   } else {
-                      log.innerHTML = "<i class='fa fa-check'></i>"
+                      cnt.innerHTML = "<i class='fa fa-check'></i>"
                   }
-              };
+              }
+              req.addEventListener("load", (e) => {
+                  increaseCount();
+                  log.innerHTML = log.innerHTML + " " + query;
+              });
+              req.addEventListener("error", (e) => {
+                  increaseCount();
+                  log.innerHTML = log.innerHTML + " " + query + " (failed)";
+              });
 
               req.send(null);
             }
