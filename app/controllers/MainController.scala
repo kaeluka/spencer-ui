@@ -57,4 +57,8 @@ class MainController @Inject()(lifecycle: ApplicationLifecycle,
   def playground = Action { implicit request =>
     Ok(views.html.playground())
   }
+
+  def unslash(path: String) = Action { implicit request =>
+    MovedPermanently("/"+path)
+  }
 }
