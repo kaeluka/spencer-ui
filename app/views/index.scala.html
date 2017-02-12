@@ -193,8 +193,8 @@
                                 case _ => Html("<span class='empty'>none</span>")
                             })
                         </td>
-                        <td><span class="evtidx">@rec.getAs[Long]("firstusage")</span></td>
-                        <td><span class="evtidx">@rec.getAs[Long]("lastusage")</span></td>
+                        <td><span class="evtidx">@Option(rec.getAs[Long]("firstusage"))</span></td>
+                        <td><span class="evtidx">@Option(rec.getAs[Long]("lastusage"))</span></td>
                     </tr>
                 }
                 <tr>
