@@ -21,6 +21,11 @@
             will give you the relevant data at the bottom of each page, for
             instance, see: <a target="_blank" href="/query/test/ImmutableObj()">the query for immutable objects</a>.
 
+            Note that these queries generally contain the name of a dataset. On
+            this page, we will consistently the <span class="code">test</span>
+            dataset (which you should use for experiments, as it's smaller and
+            therefore faster to give replies).
+
             Features that the API does not (yet!) expose are a way to access the
                 class files that were running in a benchmark and a way to
                 retrieve all events involving one or several objects,
@@ -47,6 +52,23 @@
 
         <p>
             <span class="code">curl "http://www.spencer-t.racing/json/select/test/Or(ImmutableObj()%20HeapUniqueObj())"</span>
+        </p>
+
+        <h3>Percentages of objects selected by a query</h3>
+
+        <p>
+            To get the percentage of objects (out of all objects) that pass a
+            given query, use:
+
+        </p>
+
+        <p>
+            <a target="_blank" href="http://www.spencer-t.racing/json/percentage/test/Or(ImmutableObj()%20HeapUniqueObj())">http://www.spencer-t.racing/json/percentage/test/ImmutableObj())</a>
+        </p>
+
+        <p>
+            Note that this works only for a single query, not composite queries
+            separated by slashes.
         </p>
 
         <h3>Getting Meta Information</h3>
