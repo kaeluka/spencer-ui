@@ -11,6 +11,7 @@ GET     /doc/api                              controllers.MainController.doc_api
 GET     /assets/*file                         controllers.Assets.at(path="/public", file)
 
 GET     /json/select/:dbname/:q               controllers.QueryController.json_select(dbname, q)
+GET     /json/percentage/:dbname/:q           controllers.QueryController.json_percentage(dbname, q)
 GET     /json/meta/:dbname/:q                 controllers.QueryController.json_meta2(dbname, q)
 GET     /json/datasets                        controllers.BenchmarksController.json_benchmarks()
 

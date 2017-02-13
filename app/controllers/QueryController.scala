@@ -113,6 +113,17 @@ class QueryController @Inject()(lifecycle: ApplicationLifecycle,
       }
     }
 
+  def json_percentage(dbname: String, q: String) =
+  {
+    Action { implicit req =>
+      implicit val data = mainC.getDB(dbname)
+      Ok(Json.obj(
+        "query"      -> q,
+        "percentage" -> data.getPercentage(q)
+      ))
+    }
+  }
+
   def query(dbname: String, qs_ : String) =
 //    cached(
 //      {_: RequestHeader => s"query/$qs"},
