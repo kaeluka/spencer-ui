@@ -20,9 +20,9 @@ class MainController @Inject()(lifecycle: ApplicationLifecycle,
                                messagesApi : MessagesApi,
                                cached: Cached) extends Controller {
 
-  var dbMap : Map[String, SpencerDB] = Map[String, SpencerDB]()
+  var dbMap : Map[String, PostgresSpencerDB] = Map[String, PostgresSpencerDB]()
 
-  def getDB(name: String): SpencerDB = {
+  def getDB(name: String): PostgresSpencerDB = {
     if (! this.dbMap.contains(name)) {
       println(s"creating DB for $name")
       val db: PostgresSpencerDB= new PostgresSpencerDB(name)
