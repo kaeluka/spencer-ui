@@ -117,10 +117,33 @@ class QueryController @Inject()(lifecycle: ApplicationLifecycle,
   {
     Action { implicit req =>
       implicit val data = mainC.getDB(dbname)
+      val result = data.getObjPercentage(q)
       Ok(Json.obj(
-        "query"      -> q,
-        "percentage" -> data.getPercentage(q)
+        "query" -> q,
+        "data"  -> result
       ))
+    }
+  }
+
+  def json_class_percentage(dbname: String, q: String) =
+  {
+    Action { implicit req =>
+      implicit val data = mainC.getDB(dbname)
+      val result: Option[Seq[(String, Float)]] = data.getClassPercentage(q)
+      val ret = result match {
+        case Some(res) => {
+          val classes = res.map(_._1)
+          val percentages = res.map(_._2)
+          Ok(Json.obj(
+            "query" -> q,
+            "classes" -> classes,
+            "percentages" -> percentages
+          ).toString)
+        }
+        case None      => NotAcceptable("error")
+      }
+      ret
+
     }
   }
 

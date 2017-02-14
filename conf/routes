@@ -12,6 +12,7 @@ GET     /assets/*file                         controllers.Assets.at(path="/publi
 
 GET     /json/select/:dbname/:q               controllers.QueryController.json_select(dbname, q)
 GET     /json/percentage/:dbname/:q           controllers.QueryController.json_percentage(dbname, q)
+GET     /json/classpercentage/:dbname/:q      controllers.QueryController.json_class_percentage(dbname, q)
 GET     /json/meta/:dbname/:q                 controllers.QueryController.json_meta2(dbname, q)
 GET     /json/datasets                        controllers.BenchmarksController.json_benchmarks()
 
@@ -20,10 +21,6 @@ GET     /query/:dbname/*q                     controllers.QueryController.query(
 GET     /perobj/                              controllers.PerObjController.perobj(n = "test", qs = "Obj()")
 GET     /perobj/:dbname                       controllers.PerObjController.perobj(dbname, qs = "Obj()")
 GET     /perobj/:dbname/*q                    controllers.PerObjController.perobj(dbname, q)
-
-GET     /perclass/:dbname/*q                  controllers.PerClassController.query(dbname, q)
-GET     /timing/:dbname/:q                    controllers.TimingController.query(dbname, q)
-GET     /perallocationsite/:dbname/*q         controllers.PerAllocationSiteController.query(dbname, q)
 
 GET     /apropos/:dbname/:oid                 controllers.AproposController.apropos(dbname, oid)
 
