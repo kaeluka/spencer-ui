@@ -23,12 +23,6 @@ class AproposController @Inject()(lifecycle: ApplicationLifecycle, messagesApi :
 
     val apropos = Apropos(idStr.toLong).analyse
 
-    val indegreeHistory = InDegreeMap(InDegreeSpec.HEAP).analyse.filter(_._1 == idStr.toLong)
-
-    if (indegreeHistory.count > 0) {
-      println(indegreeHistory.first._2.mkString("indegree history:\n\t- ", ",\n\t- ", ""))
-    }
-
     Ok(views.html.apropos(
       dbname,
       apropos.klass,
