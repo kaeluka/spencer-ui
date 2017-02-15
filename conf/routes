@@ -12,6 +12,7 @@ GET     /assets/*file                         controllers.Assets.at(path="/publi
 
 GET     /json/select/:dbname/:q               controllers.QueryController.json_select(dbname, q)
 GET     /json/percentage/:dbname/:q           controllers.QueryController.json_percentage(dbname, q)
+GET     /json/fieldpercentage/:dbname/:q      controllers.QueryController.json_field_percentage(dbname, q)
 GET     /json/classpercentage/:dbname/:q      controllers.QueryController.json_class_percentage(dbname, q)
 GET     /json/meta/:dbname/:q                 controllers.QueryController.json_meta2(dbname, q)
 GET     /json/datasets                        controllers.BenchmarksController.json_benchmarks()

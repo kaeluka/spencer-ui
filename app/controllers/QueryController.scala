@@ -26,15 +26,14 @@ class QueryController @Inject()(lifecycle: ApplicationLifecycle,
 
   def json_meta2(dbname: String, q: String = "Obj()") = {
     cached(
-      {_: RequestHeader => s"json_meta2/$q"},
-      2.hours.toSeconds.asInstanceOf[Int])
-    {
+      { _: RequestHeader => s"json_meta2/$q" },
+      2.hours.toSeconds.asInstanceOf[Int]) {
       Action { implicit req =>
         implicit val data = mainC.getDB(dbname)
         val cacheDuration = 3600
         QueryParser.parseObjQuery(q) match {
           case Right(qObj) =>
-            val metaQuery: WithMetaInformation = WithMetaInformation(qObj.snapshotted())
+            val metaQuery: WithMetaInformation = WithMetaInformation(qObj)
             println("variables: " + metaQuery.availableVariables)
             val objs: DataFrame = metaQuery.analyse
             val N = objs.count().asInstanceOf[Int]
@@ -44,8 +43,8 @@ class QueryController @Inject()(lifecycle: ApplicationLifecycle,
             val firstusage = new Array[Long](N)
             val lastusage = new Array[Long](N)
             val thread = new Array[String](N)
-//            val numFieldWrites = new Array[Long](N)
-//            val numFieldReads = new Array[Long](N)
+            //            val numFieldWrites = new Array[Long](N)
+            //            val numFieldReads = new Array[Long](N)
             val numCalls = new Array[Long](N)
             var i = 0
             val it = objs.toLocalIterator()
@@ -59,8 +58,8 @@ class QueryController @Inject()(lifecycle: ApplicationLifecycle,
               firstusage(i) = nxt.getAs[Long]("firstusage") // objs(i).firstusage
               lastusage(i) = nxt.getAs[Long]("lastusage") // objs(i).lastusage
               thread(i) = nxt.getAs[String]("thread") // objs(i).thread.getOrElse("undefined")
-//              numFieldWrites(i) = 0 // objs(i).numFieldWrites
-//              numFieldReads(i) =  0
+              //              numFieldWrites(i) = 0 // objs(i).numFieldWrites
+              //              numFieldReads(i) =  0
               numCalls(i) = nxt.getAs[Long]("numCalls")
               i += 1
             }
@@ -75,8 +74,8 @@ class QueryController @Inject()(lifecycle: ApplicationLifecycle,
                 "firstusage" -> toJson(firstusage),
                 "lastusage" -> toJson(lastusage),
                 "thread" -> toJson(thread),
-//                "numFieldWrites" -> toJson(numFieldWrites),
-//                "numFieldReads" -> toJson(numFieldReads),
+                //                "numFieldWrites" -> toJson(numFieldWrites),
+                //                "numFieldReads" -> toJson(numFieldReads),
                 "numCalls" -> toJson(numCalls)
               )
             ))
@@ -88,43 +87,66 @@ class QueryController @Inject()(lifecycle: ApplicationLifecycle,
   }
 
   def json_select(dbname: String, q: String) =
-//    cached(
-//      {_: RequestHeader => s"json/$q"},
-//      6.hours.toSeconds.asInstanceOf[Int])
-    {
-      val cacheDuration = 3600
-      Action { implicit req =>
-        implicit val data = mainC.getDB(dbname)
-        println(s"db is: $dbname")
-        println(s"db is: $data")
-        import data.sqlContext.implicits._
-        QueryParser.parseObjQuery(q) match {
-          case Right(qObj) =>
-            println(s"qObj = $qObj")
-            val objs = qObj.analyse
-            assert(objs != null, "need objs")
-            Ok(Json.obj(
-              "query"   -> q,
-              "objects" -> objs.select("id").as[Long].collect()
-            )).withHeaders((s"Cache-Control", s"public, max-age=$cacheDuration"))
-          case Left(_) =>
-            NotAcceptable("could not parse the query '" + q)
-        }
+  //    cached(
+  //      {_: RequestHeader => s"json/$q"},
+  //      6.hours.toSeconds.asInstanceOf[Int])
+  {
+    val cacheDuration = 3600
+    Action { implicit req =>
+      implicit val data = mainC.getDB(dbname)
+      println(s"db is: $dbname")
+      println(s"db is: $data")
+      import data.sqlContext.implicits._
+      QueryParser.parseObjQuery(q) match {
+        case Right(qObj) =>
+          println(s"qObj = $qObj")
+          val objs = qObj.analyse
+          assert(objs != null, "need objs")
+          Ok(Json.obj(
+            "query" -> q,
+            "objects" -> objs.select("id").as[Long].collect()
+          )).withHeaders((s"Cache-Control", s"public, max-age=$cacheDuration"))
+        case Left(_) =>
+          NotAcceptable("could not parse the query '" + q)
       }
     }
+  }
 
-  def json_percentage(dbname: String, q: String) =
-  {
+  def json_percentage(dbname: String, q: String) = {
     Action { implicit req =>
       implicit val data = mainC.getDB(dbname)
       val result = data.getObjPercentage(q)
       Ok(Json.obj(
         "query" -> q,
-        "data"  -> result
+        "data" -> result
       ))
     }
   }
 
+  def json_field_percentage(dbname: String, q: String) =
+    json_field_percentage_min(dbname, q, 10)
+
+  def json_field_percentage_min(dbname: String, q: String, min: Int) =
+  {
+    Action { implicit req =>
+      implicit val data = mainC.getDB(dbname)
+      val result: Option[Seq[(String, Float)]] = data.getFieldPercentage(q, min)
+      val ret = result match {
+        case Some(res) => {
+          val fields = res.map(_._1)
+          val percentages = res.map(_._2)
+          Ok(Json.obj(
+            "query"       -> q,
+            "fields"      -> fields,
+            "percentages" -> percentages
+          ).toString)
+        }
+        case None      => NotAcceptable("error")
+      }
+      ret
+
+    }
+  }
   def json_class_percentage(dbname: String, q: String) =
     json_class_percentage_min(dbname, q, 10)
 
