@@ -126,10 +126,13 @@ class QueryController @Inject()(lifecycle: ApplicationLifecycle,
   }
 
   def json_class_percentage(dbname: String, q: String) =
+    json_class_percentage_min(dbname, q, 10)
+
+  def json_class_percentage_min(dbname: String, q: String, min: Int) =
   {
     Action { implicit req =>
       implicit val data = mainC.getDB(dbname)
-      val result: Option[Seq[(String, Float)]] = data.getClassPercentage(q)
+      val result: Option[Seq[(String, Float)]] = data.getClassPercentage(q, min)
       val ret = result match {
         case Some(res) => {
           val classes = res.map(_._1)

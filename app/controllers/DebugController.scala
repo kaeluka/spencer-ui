@@ -44,7 +44,7 @@ class DebugController @Inject()(ws: WSClient, mainController: MainController)(im
 
   def clearCaches(dbname: String) = Action {
     val db = mainController.getDB(dbname)
-    db.clearCaches(Some(dbname))
+    db.clearCaches(dbname)
 //    val tables = db.session.getCluster.getMetadata.getKeyspace(dbname).getTables
 //    tables.forEach(new Consumer[TableMetadata] {
 //      override def accept(t: TableMetadata): Unit = {
