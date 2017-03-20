@@ -65,6 +65,7 @@ class QueryController @Inject()(lifecycle: ApplicationLifecycle,
               //              numFieldReads(i) =  0
               numCalls       += objs.getLong("numCalls")
             }
+            objs.close()
             Ok(Json.obj(
               "query" -> q,
               "dbname" -> dbname,
@@ -112,7 +113,7 @@ class QueryController @Inject()(lifecycle: ApplicationLifecycle,
           while (objsRS.next()) {
             objs += objsRS.getLong("id")
           }
-          assert(objs != null, "need objs")
+          objsRS.close()
 
           Ok(Json.obj(
             "query" -> q,
