@@ -1,5 +1,9 @@
 package controllers
 
+import java.sql.ResultSet
+import java.text.SimpleDateFormat
+import java.util.Calendar
+
 import play.api.libs.json.Json
 import javax.inject._
 
@@ -24,9 +28,9 @@ class QueryController @Inject()(lifecycle: ApplicationLifecycle,
                                 mainC: MainController,
                                 cached: Cached) extends Controller {
 
-  def json_meta2(dbname: String, q: String = "Obj()") = {
+  def json_meta(dbname: String, q: String = "Obj()") = {
     cached(
-      { _: RequestHeader => s"json_meta2/$q" },
+      { _: RequestHeader => s"json_meta/$q" },
       2.hours.toSeconds.asInstanceOf[Int]) {
       Action { implicit req =>
         implicit val data = mainC.getDB(dbname)
@@ -34,34 +38,32 @@ class QueryController @Inject()(lifecycle: ApplicationLifecycle,
         QueryParser.parseObjQuery(q) match {
           case Right(qObj) =>
             val metaQuery: WithMetaInformation = WithMetaInformation(qObj)
-            println("variables: " + metaQuery.availableVariables)
-            val objs: DataFrame = metaQuery.analyse
-            val N = objs.count().asInstanceOf[Int]
-            val oid = new Array[Long](N)
-            val allocationSite = new Array[String](N)
-            val klass = new Array[String](N)
-            val firstusage = new Array[Long](N)
-            val lastusage = new Array[Long](N)
-            val thread = new Array[String](N)
+            val objs: ResultSet = metaQuery.analyseJDBC
+//            val N = objs.count().asInstanceOf[Int]
+            val oid = scala.collection.mutable.ArrayBuffer[Long]()
+            val allocationSite = scala.collection.mutable.ArrayBuffer[String]()
+            val klass = scala.collection.mutable.ArrayBuffer[String]()
+            val firstusage = scala.collection.mutable.ArrayBuffer[Long]()
+            val lastusage = scala.collection.mutable.ArrayBuffer[Long]()
+            val thread = scala.collection.mutable.ArrayBuffer[String]()
             //            val numFieldWrites = new Array[Long](N)
             //            val numFieldReads = new Array[Long](N)
-            val numCalls = new Array[Long](N)
-            var i = 0
-            val it = objs.toLocalIterator()
-            while (it.hasNext) {
-              val nxt = it.next()
-              oid(i) = nxt.getAs[java.lang.Long]("id")
-              allocationSite(i) =
-                Option(nxt.getAs[String]("allocationsitefile")).getOrElse("undefined") +
-                  Option(nxt.getAs[java.lang.Long]("allocationsiteline")).getOrElse("undefined")
-              klass(i) = Option(nxt.getAs[String]("klass")).getOrElse("undefined")
-              firstusage(i) = nxt.getAs[Long]("firstusage") // objs(i).firstusage
-              lastusage(i) = nxt.getAs[Long]("lastusage") // objs(i).lastusage
-              thread(i) = nxt.getAs[String]("thread") // objs(i).thread.getOrElse("undefined")
+            val numCalls = scala.collection.mutable.ArrayBuffer[Long]()
+            while (objs.next) {
+              oid += objs.getLong("id")
+              val file = Option(objs.getString("allocationsitefile"))
+              val line = objs.getLong("allocationsiteline") match {
+                case 0 => None
+                case n => Some(n)
+              }
+              allocationSite += file.getOrElse("undefined")+":"+line.getOrElse("undefined")
+              klass          += Option(objs.getString("klass")).getOrElse("undefined")
+              firstusage     += objs.getLong("firstusage")
+              lastusage      += objs.getLong("lastusage")
+              thread         += objs.getString("thread")
               //              numFieldWrites(i) = 0 // objs(i).numFieldWrites
               //              numFieldReads(i) =  0
-              numCalls(i) = nxt.getAs[Long]("numCalls")
-              i += 1
+              numCalls       += objs.getLong("numCalls")
             }
             Ok(Json.obj(
               "query" -> q,
@@ -94,17 +96,27 @@ class QueryController @Inject()(lifecycle: ApplicationLifecycle,
     val cacheDuration = 3600
     Action { implicit req =>
       implicit val data = mainC.getDB(dbname)
-      println(s"db is: $dbname")
-      println(s"db is: $data")
       import data.sqlContext.implicits._
       QueryParser.parseObjQuery(q) match {
         case Right(qObj) =>
-          println(s"qObj = $qObj")
-          val objs = qObj.analyse
+          println(
+            s"""=========================================================
+                |JSON_SELECT:    $dbname/$q
+                |TIME:           ${new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Calendar.getInstance.getTime)}
+                |REMOTE ADDRESS: ${req.remoteAddress}
+                |DEPENDENCIES:
+                |${qObj.dependencyTree()}
+                |=========================================================""".stripMargin)
+          val objsRS = qObj.analyseJDBC : ResultSet
+          var objs = scala.collection.mutable.ArrayBuffer[Long]()
+          while (objsRS.next()) {
+            objs += objsRS.getLong("id")
+          }
           assert(objs != null, "need objs")
+
           Ok(Json.obj(
             "query" -> q,
-            "objects" -> objs.select("id").as[Long].collect()
+            "objects" -> objs.result()
           )).withHeaders((s"Cache-Control", s"public, max-age=$cacheDuration"))
         case Left(_) =>
           NotAcceptable("could not parse the query '" + q)
@@ -179,19 +191,16 @@ class QueryController @Inject()(lifecycle: ApplicationLifecycle,
     {
       Action { implicit req =>
         val qs = QueryParser.unescape(qs_)
-        println(s"qs=$qs")
         val eitherQueries = qs.split("/").map(QueryParser.parseObjQuery(_))
 
         if (eitherQueries.exists(_.isLeft)) {
           NotAcceptable("could not parse the query '" + qs + "':\n" + eitherQueries.filter(_.isLeft).mkString(", "))
         } else {
-          println("================================ " + qs + " -parsed-> " + eitherQueries.mkString(", "))
           val queries = eitherQueries.map(_.right.get)
           if (qs != QueryParser.unescape(queries.mkString("/"))) {
             println("redirecting..")
             Redirect(routes.QueryController.query(dbname, queries.mkString("/")))
           } else {
-            println(s"queries remade: ${queries.mkString("/")}")
             Ok(views.html.query(dbname, queries))
           }
         }

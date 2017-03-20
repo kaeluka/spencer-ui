@@ -245,7 +245,7 @@
 
                     {
                         const req = new XMLHttpRequest();
-                        req.open("GET", '@routes.QueryController.json_meta2(dbname, "Obj()")');
+                        req.open("GET", '@routes.QueryController.json_meta(dbname, "Obj()")');
                         req.onload = function (e) {
                             console.log({req, e});
                             metaDataBuffer = JSON.parse(req.responseText);
@@ -1021,7 +1021,7 @@
 
     <script>
         let allObjsSelection = "@(routes.QueryController.json_select(dbname, "Obj()"))";
-        let allObjsMeta = "@(routes.QueryController.json_meta2(dbname, "Obj()"))";
+        let allObjsMeta = "@(routes.QueryController.json_meta(dbname, "Obj()"))";
         d3.select("#jsonLinks")
                 .selectAll("li")
                 .data(QUERIES)

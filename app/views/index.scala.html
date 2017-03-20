@@ -1,8 +1,8 @@
 @import com.github.kaeluka.spencer.analysis.QueryParser
-@import com.github.kaeluka.spencer.analysis.SpencerDB
+@import com.github.kaeluka.spencer.PostgresSpencerDB
 @import org.apache.spark.sql.functions._
 
-@()(implicit db: SpencerDB)
+@()(implicit db: PostgresSpencerDB)
 @*
  * Call the `main` template with two arguments. The first
  * argument is a `String` with the title of the page, the second
