@@ -1,21 +1,14 @@
 package controllers
 
-import java.util
-import java.util.Map.Entry
-import java.util.function.Consumer
 import javax.inject._
 
-import akka.actor.ActorSystem
-import com.datastax.driver.core.TableMetadata
 import com.fasterxml.jackson.databind.JsonNode
-import com.github.kaeluka.spencer.analysis.SpencerDB
 import play.api.libs.ws.{WSClient, WSResponse}
 import play.api.mvc._
 import play.libs.Json
 import play.twirl.api.Html
 
-import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future, Promise}
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class DebugController @Inject()(ws: WSClient, mainController: MainController)(implicit val executionContext: ExecutionContext) extends Controller {
