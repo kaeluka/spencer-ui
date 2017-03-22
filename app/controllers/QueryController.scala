@@ -19,6 +19,8 @@ import play.api.mvc._
 
 import scala.concurrent.duration._
 
+import play.api.Logger
+
 case class QueryDataItem(oid: VertexId, klass: Option[String], allocationSite: Option[String])
 case class QueryData(dbname: String, query: String, explanation: String, data: Seq[QueryDataItem])
 
@@ -97,18 +99,18 @@ class QueryController @Inject()(lifecycle: ApplicationLifecycle,
     val cacheDuration = 3600
     Action { implicit req =>
       implicit val data = mainC.getDB(dbname)
-      import data.sqlContext.implicits._
       QueryParser.parseObjQuery(q) match {
         case Right(qObj) =>
-          println(
-            s"""=========================================================
+          Logger.debug(
+            s"""
+                |=========================================================
                 |JSON_SELECT:    $dbname/$q
                 |TIME:           ${new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Calendar.getInstance.getTime)}
                 |REMOTE ADDRESS: ${req.remoteAddress}
                 |DEPENDENCIES:
                 |${qObj.dependencyTree()}
                 |=========================================================""".stripMargin)
-          val objsRS = qObj.analyseJDBC : ResultSet
+          val objsRS = qObj.analyseJDBC
           var objs = scala.collection.mutable.ArrayBuffer[Long]()
           while (objsRS.next()) {
             objs += objsRS.getLong("id")
@@ -120,7 +122,7 @@ class QueryController @Inject()(lifecycle: ApplicationLifecycle,
             "objects" -> objs.result()
           )).withHeaders((s"Cache-Control", s"public, max-age=$cacheDuration"))
         case Left(_) =>
-          NotAcceptable("could not parse the query '" + q)
+          NotAcceptable(s"could not parse the query '$q'")
       }
     }
   }
@@ -199,8 +201,9 @@ class QueryController @Inject()(lifecycle: ApplicationLifecycle,
         } else {
           val queries = eitherQueries.map(_.right.get)
           if (qs != QueryParser.unescape(queries.mkString("/"))) {
-            println("redirecting..")
-            Redirect(routes.QueryController.query(dbname, queries.mkString("/")))
+            val compositeCommand = queries.mkString("/")
+            Logger.debug(s"redirecting $dbname/${queries.mkString("/")} => $dbname/$compositeCommand")
+            Redirect(routes.QueryController.query(dbname, compositeCommand))
           } else {
             Ok(views.html.query(dbname, queries))
           }

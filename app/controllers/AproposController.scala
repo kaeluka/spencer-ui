@@ -1,5 +1,6 @@
 package controllers
 
+import java.sql.ResultSet
 import javax.inject._
 
 import com.github.kaeluka.spencer.analysis.SpencerGraphImplicits._
