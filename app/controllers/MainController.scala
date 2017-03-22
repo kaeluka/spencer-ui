@@ -3,7 +3,6 @@ package controllers
 import javax.inject._
 
 import com.github.kaeluka.spencer.PostgresSpencerDB
-import com.github.kaeluka.spencer.analysis.SpencerDB
 import play.api.cache.Cached
 import play.api.i18n.MessagesApi
 import play.api.inject.ApplicationLifecycle
