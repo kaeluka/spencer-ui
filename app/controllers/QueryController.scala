@@ -3,25 +3,20 @@ package controllers
 import java.sql.ResultSet
 import java.text.SimpleDateFormat
 import java.util.Calendar
-
-import play.api.libs.json.Json
 import javax.inject._
 
-import com.github.kaeluka.spencer.analysis.SpencerGraphImplicits._
 import com.github.kaeluka.spencer.analysis._
-import org.apache.spark.graphx.VertexId
-import org.apache.spark.sql.DataFrame
+import play.api.Logger
 import play.api.cache.Cached
 import play.api.i18n.MessagesApi
 import play.api.inject.ApplicationLifecycle
+import play.api.libs.json.Json
 import play.api.libs.json.Json.toJson
 import play.api.mvc._
 
 import scala.concurrent.duration._
 
-import play.api.Logger
-
-case class QueryDataItem(oid: VertexId, klass: Option[String], allocationSite: Option[String])
+case class QueryDataItem(oid: Long, klass: Option[String], allocationSite: Option[String])
 case class QueryData(dbname: String, query: String, explanation: String, data: Seq[QueryDataItem])
 
 @Singleton
@@ -40,7 +35,7 @@ class QueryController @Inject()(lifecycle: ApplicationLifecycle,
         QueryParser.parseObjQuery(q) match {
           case Right(qObj) =>
             val metaQuery: WithMetaInformation = WithMetaInformation(qObj)
-            val objs: ResultSet = metaQuery.analyseJDBC
+            val objs: ResultSet = metaQuery.analyse
 //            val N = objs.count().asInstanceOf[Int]
             val oid = scala.collection.mutable.ArrayBuffer[Long]()
             val allocationSite = scala.collection.mutable.ArrayBuffer[String]()
@@ -110,7 +105,7 @@ class QueryController @Inject()(lifecycle: ApplicationLifecycle,
                 |DEPENDENCIES:
                 |${qObj.dependencyTree()}
                 |=========================================================""".stripMargin)
-          val objsRS = qObj.analyseJDBC
+          val objsRS = qObj.analyse : ResultSet
           var objs = scala.collection.mutable.ArrayBuffer[Long]()
           while (objsRS.next()) {
             objs += objsRS.getLong("id")

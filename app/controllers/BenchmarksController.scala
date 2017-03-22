@@ -1,12 +1,8 @@
 package controllers
 
-import play.api.libs.json.Json
 import javax.inject._
 
-import com.github.kaeluka.spencer.analysis.SpencerGraphImplicits._
-import com.github.kaeluka.spencer.analysis._
 import com.github.kaeluka.spencer._
-import org.apache.spark.graphx.VertexId
 import play.api.cache.Cached
 import play.api.i18n.MessagesApi
 import play.api.inject.ApplicationLifecycle

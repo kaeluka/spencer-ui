@@ -3,7 +3,6 @@ package controllers
 import java.sql.ResultSet
 import javax.inject._
 
-import com.github.kaeluka.spencer.analysis.SpencerGraphImplicits._
 import com.github.kaeluka.spencer.analysis._
 import play.api.i18n.MessagesApi
 import play.api.inject.ApplicationLifecycle

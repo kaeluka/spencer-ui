@@ -15,14 +15,11 @@ libraryDependencies ++= Seq(
   cache,
   ws,
   "org.scalatestplus.play" %% "scalatestplus-play" % "1.5.1" % Test,
-  //"org.apache.spark" %% "spark-graphx" % "1.6.1",
-  //"org.apache.spark" ^^
   "com.github.kaeluka" % "spencer-analyse" % "0.1.3-SNAPSHOT",
   filters
 )
 
 dependencyOverrides ++= Set(
   "com.fasterxml.jackson.core" % "jackson-databind" % "2.6.5" // for spark 2.0.0
-  //"com.fasterxml.jackson.core" % "jackson-databind" % "2.4.4"
 )
 

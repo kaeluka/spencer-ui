@@ -1,5 +1,5 @@
-@import com.github.kaeluka.spencer.analysis.VertexIdAnalyser
-@(dbname: String, queries: Seq[VertexIdAnalyser])
+@import com.github.kaeluka.spencer.analysis.SpencerQuery
+@(dbname: String, queries: Seq[SpencerQuery])
 
 @main(queries.mkString(" / ")) {
 

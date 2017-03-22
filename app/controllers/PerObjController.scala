@@ -2,8 +2,6 @@ package controllers
 
 import javax.inject._
 
-import com.github.kaeluka.spencer.analysis._
-import org.apache.spark.graphx.VertexId
 import play.api.cache.Cached
 import play.api.i18n.MessagesApi
 import play.api.inject.ApplicationLifecycle
@@ -11,7 +9,7 @@ import play.api.mvc._
 
 import scala.concurrent.duration._
 
-case class PerObjDataItem(oid: VertexId, klass: Option[String], allocationSite: Option[String])
+case class PerObjDataItem(oid: Long, klass: Option[String], allocationSite: Option[String])
 case class PerObjData(dbname: String, query: String, data: Seq[PerObjDataItem])
 
 object PerObjControllerUtil {
