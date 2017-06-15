@@ -132,6 +132,10 @@
             <i class="fa fa-spinner fa-spin" aria-hidden="true"></i>
         </div>
 
+        <div id="perClassContainer"></div>
+
+        <div id="perFieldContainer"></div>
+
         <script>
                 String.prototype.trimEnd = function(c) {
                     if (c)
@@ -166,6 +170,8 @@
                 }
 
                 var dataBuffer = {};
+                var perFieldDataBuffer = {};
+                var perClassDataBuffer = {};
                 var metaDataBuffer = { received: false };
                 const enabledVariables = {};
 
@@ -230,7 +236,6 @@
                         const req = new XMLHttpRequest();
                         req.open("GET", "@routes.QueryController.json_select(dbname, q.toString)");
                         req.onload = function (e) {
-                            console.log({req, e});
                             const resp = JSON.parse(req.responseText);
                             dataBuffer["@q.toString"] = resp.objects.filter(o => allObjsSet.has(o));
                             const spinner = document.getElementById("spinner-@i").parentNode.innerHTML = "<i class='fa fa-check' aria-hidden='true'></i>";
@@ -239,6 +244,26 @@
                         req.addEventListener("error", (e) => {
                             const spinner = document.getElementById("spinner-@i").parentNode.innerHTML = "<i class='fa fa-close' aria-hidden='true'></i>";
                         });
+                        req.send(null);
+                    }
+                    {
+                        const req = new XMLHttpRequest();
+                        req.open("GET", "@routes.QueryController.json_class_percentage(dbname, q.toString)");
+                        req.onload = function (e) {
+                            const resp = JSON.parse(req.responseText);
+                            perClassDataBuffer["@q.toString"] = resp;
+                            drawPerClassTable();
+                        };
+                        req.send(null);
+                    }
+                    {
+                        const req = new XMLHttpRequest();
+                        req.open("GET", "@routes.QueryController.json_field_percentage(dbname, q.toString)");
+                        req.onload = function (e) {
+                            const resp = JSON.parse(req.responseText);
+                            perFieldDataBuffer["@q.toString"] = resp;
+                            drawPerFieldTable();
+                        };
                         req.send(null);
                     }
                     }
@@ -590,7 +615,6 @@
 
                 function draw() {
                     const data = getRawData(includeMatchList, hideMatchList);
-
                     drawMatrix(data);
                     drawTable(data);
                     addHints();
@@ -847,6 +871,56 @@
                                             .join(", ")
                                 }
                             });
+                }
+
+                function drawPerClassTable() {
+                    // FIXME: it would be nicer to produce one sortable table with a result column for
+                    // each query
+                    console.log({perClassDataBuffer});
+                    const container = document.getElementById("perClassContainer");
+                    container.innerHTML = '<h1>Per Class Statistics</h1>'+
+                            '<div class="text"><p>Percentage of instances of a class that was selected by the query.</p></div>';
+                    let ret = '';
+                    for (let q in perClassDataBuffer) {
+                        ret += '<h3>'+q+'</h3>'
+                        ret += '<table><thead><tr>';
+                        ret += '<th>Class Name</th>';
+                        ret += '<th>Selected [&#37;]</th>';
+                        ret += '</tr></thead><tbody>';
+                        const buf = perClassDataBuffer[q];
+                        for (let i in buf.classes) {
+                            ret += '<tr>';
+                            ret += '<td><span class="code">'+buf.classes[i]+'</span></td>';
+                            ret += '<td>'+Math.round(buf.percentages[i])+'</td>';
+                            ret += '</tr>';
+                        }
+                        ret+='</tbody></table>';
+                    }
+                    container.innerHTML += ret;
+                }
+                function drawPerFieldTable() {
+                    // FIXME: it would be nicer to produce one sortable table with a result column for
+                    // each query
+                    const container = document.getElementById("perFieldContainer");
+                    container.innerHTML = '<h1>Per Field Statistics</h1>'+
+                            '<div class="text"><p>Percentage of objects referred to from a field that was selected by the query.</p></div>';
+                    let ret = '';
+                    for (let q in perFieldDataBuffer) {
+                        ret += '<h3>'+q+'</h3>'
+                        ret += '<table><thead><tr>';
+                        ret += '<th>Field Name</th>';
+                        ret += '<th>Selected [&#37;]</th>';
+                        ret += '</tr></thead><tbody>';
+                        const buf = perFieldDataBuffer[q];
+                        for (let i in buf.fields) {
+                            ret += '<tr>';
+                            ret += '<td><span class="code">'+buf.fields[i]+'</span></td>';
+                            ret += '<td>'+Math.round(buf.percentages[i])+'</td>';
+                            ret += '</tr>';
+                        }
+                        ret+='</tbody></table>';
+                    }
+                    container.innerHTML += ret;
                 }
 
                 function drawMatrix(data) {
