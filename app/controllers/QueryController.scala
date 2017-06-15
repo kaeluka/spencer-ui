@@ -36,15 +36,14 @@ class QueryController @Inject()(lifecycle: ApplicationLifecycle,
           case Right(qObj) =>
             val metaQuery: WithMetaInformation = WithMetaInformation(qObj)
             val objs: ResultSet = metaQuery.analyse
-//            val N = objs.count().asInstanceOf[Int]
             val oid = scala.collection.mutable.ArrayBuffer[Long]()
             val allocationSite = scala.collection.mutable.ArrayBuffer[String]()
             val klass = scala.collection.mutable.ArrayBuffer[String]()
             val firstusage = scala.collection.mutable.ArrayBuffer[Long]()
             val lastusage = scala.collection.mutable.ArrayBuffer[Long]()
             val thread = scala.collection.mutable.ArrayBuffer[String]()
-            //            val numFieldWrites = new Array[Long](N)
-            //            val numFieldReads = new Array[Long](N)
+            val numFieldWrites = new scala.collection.mutable.ArrayBuffer[Long]()
+            val numFieldReads = new scala.collection.mutable.ArrayBuffer[Long]()
             val numCalls = scala.collection.mutable.ArrayBuffer[Long]()
             while (objs.next) {
               oid += objs.getLong("id")
@@ -58,8 +57,8 @@ class QueryController @Inject()(lifecycle: ApplicationLifecycle,
               firstusage     += objs.getLong("firstusage")
               lastusage      += objs.getLong("lastusage")
               thread         += objs.getString("thread")
-              //              numFieldWrites(i) = 0 // objs(i).numFieldWrites
-              //              numFieldReads(i) =  0
+              numFieldWrites += objs.getLong("numFieldWrites")
+              numFieldReads  += objs.getLong("numFieldReads")
               numCalls       += objs.getLong("numCalls")
             }
             objs.close()
@@ -74,8 +73,8 @@ class QueryController @Inject()(lifecycle: ApplicationLifecycle,
                 "firstusage" -> toJson(firstusage),
                 "lastusage" -> toJson(lastusage),
                 "thread" -> toJson(thread),
-                //                "numFieldWrites" -> toJson(numFieldWrites),
-                //                "numFieldReads" -> toJson(numFieldReads),
+                "numFieldWrites" -> toJson(numFieldWrites),
+                "numFieldReads" -> toJson(numFieldReads),
                 "numCalls" -> toJson(numCalls)
               )
             ))
